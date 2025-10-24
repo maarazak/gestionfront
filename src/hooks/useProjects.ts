@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api, ensureCSRFToken } from '@/lib/api';
 import { Task } from './useTasks';
 import { QUERY_KEYS, API_CONFIG } from '@/lib/constants';
 
@@ -44,6 +44,7 @@ export const useCreateProject = () => {
   
   return useMutation({
     mutationFn: async (projectData: Partial<Project>) => {
+      await ensureCSRFToken();
       const { data } = await api.post('/projects', projectData);
       return data;
     },
@@ -61,6 +62,7 @@ export const useUpdateProject = () => {
   
   return useMutation({
     mutationFn: async ({ id, ...projectData }: Partial<Project> & { id: string }) => {
+      await ensureCSRFToken();
       const { data } = await api.put(`/projects/${id}`, projectData);
       return data;
     },
@@ -79,6 +81,7 @@ export const useDeleteProject = () => {
   
   return useMutation({
     mutationFn: async (id: string) => {
+      await ensureCSRFToken();
       await api.delete(`/projects/${id}`);
     },
     onSuccess: () => {

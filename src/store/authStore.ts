@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api } from '@/lib/api';
+import { api, ensureCSRFToken } from '@/lib/api';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/lib/constants';
 
 interface User {
@@ -44,6 +44,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, password, tenantSlug) => {
     set({ isLoading: true, error: null });
     try {
+      await ensureCSRFToken();
+
       const { data } = await api.post('/login', {
         email,
         password,
@@ -69,6 +71,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   register: async (registerData) => {
     set({ isLoading: true, error: null });
     try {
+      await ensureCSRFToken();
+
       const { data } = await api.post('/register', registerData);
       
       if (typeof window !== 'undefined') {

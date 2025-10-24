@@ -1,9 +1,7 @@
 import { useCallback } from 'react';
 import toast from 'react-hot-toast';
 
-/**
- * Hook pour la gestion centralisée des erreurs avec notifications toast
- */
+// Hook pour la gestion centralisée des erreurs avec notifications toast
 export const useErrorHandler = () => {
   const handleError = useCallback((error: unknown, defaultMessage = 'Une erreur est survenue') => {
     let message = defaultMessage;
@@ -16,10 +14,8 @@ export const useErrorHandler = () => {
       message = String(error.message);
     }
     
-    // Log pour debugging
     console.error('Error handled:', error);
     
-    // Notification utilisateur
     toast.error(message);
   }, []);
 

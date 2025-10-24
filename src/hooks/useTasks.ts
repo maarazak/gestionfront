@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api, ensureCSRFToken } from '@/lib/api';
 
 export interface Task {
   id: string;
@@ -40,6 +40,7 @@ export const useCreateTask = () => {
   
   return useMutation({
     mutationFn: async (taskData: Partial<Task>) => {
+      await ensureCSRFToken();
       const { data } = await api.post('/tasks', taskData);
       return data;
     },
@@ -57,6 +58,7 @@ export const useUpdateTask = () => {
   
   return useMutation({
     mutationFn: async ({ id, ...taskData }: Partial<Task> & { id: string }) => {
+      await ensureCSRFToken();
       const { data } = await api.put(`/tasks/${id}`, taskData);
       return data;
     },
@@ -72,6 +74,7 @@ export const useDeleteTask = () => {
   
   return useMutation({
     mutationFn: async (id: string) => {
+      await ensureCSRFToken();
       await api.delete(`/tasks/${id}`);
     },
     onSuccess: () => {

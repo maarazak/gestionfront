@@ -34,7 +34,6 @@ export default function TasksPage() {
     );
   }
 
-  // Filtrage des tâches
   const filteredTasks = tasks?.filter((task) => {
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
