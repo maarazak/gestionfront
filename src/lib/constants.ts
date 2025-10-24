@@ -1,5 +1,5 @@
 /**
- * Constantes centralisées pour éviter les magic strings
+ * Constantes centralisées
  */
 
 // Query Keys pour React Query
