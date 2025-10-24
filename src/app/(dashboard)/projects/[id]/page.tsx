@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { TaskDialog } from '@/components/tasks/task-dialog';
 import { TaskList } from '@/components/tasks/task-list';
 import { ProjectDialog } from '@/components/projects/project-dialog';
+import { useAuthStore } from '@/store/authStore';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,14 +27,17 @@ export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
+  const { user } = useAuthStore();
   
-  const { data: project, isLoading: projectLoading } = useProject(projectId);
+  const { data: project, isLoading: projectLoading, error: projectError } = useProject(projectId);
   const { data: tasks, isLoading: tasksLoading } = useTasks(projectId);
   const deleteProject = useDeleteProject();
   
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  
+  const isAdmin = user?.role === 'admin';
 
   const handleDelete = async () => {
     await deleteProject.mutateAsync(projectId);
@@ -44,6 +48,25 @@ export default function ProjectDetailPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+ 
+  if (projectError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          {projectError.response?.status === 403 
+            ? "Accès refusé" 
+            : "Projet non trouvé"}
+        </h2>
+        <p className="text-gray-600 mb-4">
+          {projectError.response?.data?.message || "Vous n'avez pas accès à ce projet."}
+        </p>
+        <Link href="/projects">
+          <Button>Retour aux projets</Button>
+        </Link>
       </div>
     );
   }
@@ -95,16 +118,18 @@ export default function ProjectDetailPage() {
               : 'Archivé'}
           </span>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
-            <Edit className="h-4 w-4 mr-2" />
-            Modifier
-          </Button>
-          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-            <Trash2 className="h-4 w-4 mr-2" />
-            Supprimer
-          </Button>
-        </div>
+        {isAdmin && (
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Modifier
+            </Button>
+            <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Supprimer
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -156,10 +181,12 @@ export default function ProjectDetailPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Tâches du projet</CardTitle>
-            <Button onClick={() => setTaskDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle Tâche
-            </Button>
+            {isAdmin && (
+              <Button onClick={() => setTaskDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle Tâche
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>

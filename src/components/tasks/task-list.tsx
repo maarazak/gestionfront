@@ -5,6 +5,7 @@ import { Task, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, Edit, Trash2, Calendar, User } from 'lucide-react';
 import { TaskDialog } from './task-dialog';
+import { useAuthStore } from '@/store/authStore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,11 +31,14 @@ interface TaskListProps {
 }
 
 export function TaskList({ tasks, projectId }: TaskListProps) {
+  const { user } = useAuthStore();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  
+  const isAdmin = user?.role === 'admin';
 
   const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
     await updateTask.mutateAsync({ id: taskId, status: newStatus });
@@ -119,29 +123,31 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                   )}
                 </div>
                 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="flex-shrink-0">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setEditingTask(task)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Modifier
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setTaskToDelete(task.id);
-                        setDeleteDialogOpen(true);
-                      }}
-                      className="text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Supprimer
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {isAdmin && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="flex-shrink-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setEditingTask(task)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Modifier
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setTaskToDelete(task.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
 
               {/* Métadonnées */}
