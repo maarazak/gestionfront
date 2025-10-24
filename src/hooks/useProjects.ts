@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Task } from './useTasks';
+import { QUERY_KEYS, API_CONFIG } from '@/lib/constants';
 
 export interface Project {
   id: string;
@@ -15,22 +16,26 @@ export interface Project {
 
 export const useProjects = () => {
   return useQuery({
-    queryKey: ['projects'],
+    queryKey: QUERY_KEYS.PROJECTS,
     queryFn: async () => {
       const { data } = await api.get<Project[]>('/projects');
       return data;
     },
+    staleTime: API_CONFIG.STALE_TIME,
+    retry: API_CONFIG.RETRY_ATTEMPTS,
   });
 };
 
 export const useProject = (id: string) => {
   return useQuery({
-    queryKey: ['projects', id],
+    queryKey: QUERY_KEYS.PROJECT(id),
     queryFn: async () => {
       const { data } = await api.get<Project>(`/projects/${id}`);
       return data;
     },
     enabled: !!id,
+    staleTime: API_CONFIG.STALE_TIME,
+    retry: API_CONFIG.RETRY_ATTEMPTS,
   });
 };
 
@@ -43,7 +48,10 @@ export const useCreateProject = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROJECTS });
+    },
+    onError: (error) => {
+      console.error('Error creating project:', error);
     },
   });
 };
@@ -57,8 +65,11 @@ export const useUpdateProject = () => {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['projects', variables.id] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROJECTS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROJECT(variables.id) });
+    },
+    onError: (error) => {
+      console.error('Error updating project:', error);
     },
   });
 };
@@ -71,7 +82,10 @@ export const useDeleteProject = () => {
       await api.delete(`/projects/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROJECTS });
+    },
+    onError: (error) => {
+      console.error('Error deleting project:', error);
     },
   });
 };

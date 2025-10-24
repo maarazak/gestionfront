@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/lib/constants';
 
 interface User {
   id: string;
@@ -13,59 +14,97 @@ interface User {
   };
 }
 
+interface RegisterData {
+  tenant_name: string;
+  tenant_slug: string;
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
 interface AuthState {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  error: string | null;
   login: (email: string, password: string, tenantSlug: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
+  clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
   isLoading: false,
+  error: null,
 
   login: async (email, password, tenantSlug) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const { data } = await api.post('/login', {
         email,
         password,
         tenant_slug: tenantSlug,
       });
-      localStorage.setItem('token', data.token);
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', data.token);
+      }
+      
       set({ user: data.user, token: data.token });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : ERROR_MESSAGES.NETWORK_ERROR;
+      set({ error: errorMessage });
+      throw new Error(errorMessage);
     } finally {
       set({ isLoading: false });
     }
   },
 
   register: async (registerData) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const { data } = await api.post('/register', registerData);
-      localStorage.setItem('token', data.token);
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', data.token);
+      }
+      
       set({ user: data.user, token: data.token });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : ERROR_MESSAGES.NETWORK_ERROR;
+      set({ error: errorMessage });
+      throw new Error(errorMessage);
     } finally {
       set({ isLoading: false });
     }
   },
 
   logout: () => {
-    localStorage.removeItem('token');
-    set({ user: null, token: null });
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
+    set({ user: null, token: null, error: null });
   },
 
   fetchUser: async () => {
     try {
       const { data } = await api.get('/me');
-      set({ user: data });
-    } catch (error) {
-      set({ user: null, token: null });
-      localStorage.removeItem('token');
+      set({ user: data, error: null });
+    } catch (error: unknown) {
+      set({ user: null, token: null, error: ERROR_MESSAGES.UNAUTHORIZED });
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+      }
     }
   },
+
+  clearError: () => set({ error: null }),
 }));

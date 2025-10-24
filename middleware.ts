@@ -8,14 +8,15 @@ export function middleware(request: NextRequest) {
   const isDashboard = request.nextUrl.pathname.startsWith('/dashboard') ||
                       request.nextUrl.pathname.startsWith('/projects') ||
                       request.nextUrl.pathname.startsWith('/tasks');
+  const isRoot = request.nextUrl.pathname === '/';
 
   // Rediriger vers login si pas de token et route protégée
-  if (!token && isDashboard) {
+  if (!token && (isDashboard || isRoot)) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Rediriger vers dashboard si token et sur page auth
-  if (token && isAuthPage) {
+  // Rediriger vers dashboard si token et sur page auth ou racine
+  if (token && (isAuthPage || isRoot)) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
@@ -23,5 +24,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/projects/:path*', '/tasks/:path*', '/login', '/register'],
+  matcher: ['/', '/dashboard/:path*', '/projects/:path*', '/tasks/:path*', '/login', '/register'],
 };
