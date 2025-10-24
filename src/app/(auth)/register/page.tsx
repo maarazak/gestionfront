@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
@@ -12,7 +12,7 @@ import { Building2 } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, isLoading } = useAuthStore();
+  const { register, isLoading, error: storeError, clearError } = useAuthStore();
   const [formData, setFormData] = useState({
     tenant_name: '',
     tenant_slug: '',
@@ -22,6 +22,10 @@ export default function RegisterPage() {
     password_confirmation: '',
   });
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,16 +40,20 @@ export default function RegisterPage() {
       await register(formData);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de l\'inscription');
+      setError(err.message || 'Erreur lors de l\'inscription');
     }
   };
 
   const generateSlug = (name: string) => {
     return name
       .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
   };
+
+  const displayError = error || storeError;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -61,9 +69,9 @@ export default function RegisterPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {error && (
+            {displayError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
-                {error}
+                {displayError}
               </div>
             )}
 
@@ -95,7 +103,7 @@ export default function RegisterPage() {
                 required
               />
               <p className="text-xs text-gray-500">
-                Utilisé pour identifier votre organisation
+                Utilisé pour identifier votre organisation (lettres minuscules, chiffres et tirets uniquement)
               </p>
             </div>
 
@@ -135,6 +143,9 @@ export default function RegisterPage() {
                   required
                   minLength={8}
                 />
+                <p className="text-xs text-gray-500">
+                  Minimum 8 caractères
+                </p>
               </div>
 
               <div className="space-y-2 mt-3">

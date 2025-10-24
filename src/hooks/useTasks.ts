@@ -24,13 +24,19 @@ export interface Task {
   };
 }
 
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
 export const useTasks = (projectId?: string) => {
   return useQuery({
     queryKey: ['tasks', projectId],
     queryFn: async () => {
       const params = projectId ? { project_id: projectId } : {};
-      const { data } = await api.get<Task[]>('/tasks', { params });
-      return data;
+      const { data } = await api.get<ApiResponse<Task[]>>('/tasks', { params });
+      return data.data; 
     },
   });
 };
@@ -41,8 +47,8 @@ export const useCreateTask = () => {
   return useMutation({
     mutationFn: async (taskData: Partial<Task>) => {
       await ensureCSRFToken();
-      const { data } = await api.post('/tasks', taskData);
-      return data;
+      const { data } = await api.post<ApiResponse<Task>>('/tasks', taskData);
+      return data.data; 
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -59,12 +65,12 @@ export const useUpdateTask = () => {
   return useMutation({
     mutationFn: async ({ id, ...taskData }: Partial<Task> & { id: string }) => {
       await ensureCSRFToken();
-      const { data } = await api.put(`/tasks/${id}`, taskData);
-      return data;
+      const { data } = await api.put<ApiResponse<Task>>(`/tasks/${id}`, taskData);
+      return data.data; 
     },
-    onSuccess: (data) => {
+    onSuccess: (task) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['projects', data.project_id] });
+      queryClient.invalidateQueries({ queryKey: ['projects', task.project_id] });
     },
   });
 };

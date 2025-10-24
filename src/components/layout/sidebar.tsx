@@ -7,21 +7,25 @@ import {
   LayoutDashboard, 
   FolderKanban, 
   CheckSquare,
-  Settings,
+  Users,
   Building2
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Projets', href: '/projects', icon: FolderKanban },
-  { name: 'Tâches', href: '/tasks', icon: CheckSquare },
-  { name: 'Paramètres', href: '/settings', icon: Settings },
-];
-
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuthStore();
+
+  const isAdmin = user?.role === 'admin';
+
+  const navigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, adminOnly: false },
+    { name: 'Projets', href: '/projects', icon: FolderKanban, adminOnly: false },
+    { name: 'Tâches', href: '/tasks', icon: CheckSquare, adminOnly: false },
+    { name: 'Utilisateurs', href: '/users', icon: Users, adminOnly: true },
+  ];
+
+  const visibleNavigation = navigation.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <div className="hidden md:flex md:flex-shrink-0">
@@ -33,11 +37,18 @@ export function Sidebar() {
               <h2 className="text-lg font-semibold text-gray-900">
                 {user?.tenant.name}
               </h2>
-              <p className="text-xs text-gray-500">{user?.name}</p>
+              <p className="text-xs text-gray-500">
+                {user?.name}
+                {isAdmin && (
+                  <span className="ml-2 px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
+                    Admin
+                  </span>
+                )}
+              </p>
             </div>
           </div>
           <nav className="flex-1 px-2 space-y-1">
-            {navigation.map((item) => {
+            {visibleNavigation.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               return (
                 <Link

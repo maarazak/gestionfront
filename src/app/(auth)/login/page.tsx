@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
@@ -12,13 +12,17 @@ import { Building2 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading } = useAuthStore();
+  const { login, isLoading, error: storeError, clearError } = useAuthStore();
   const [formData, setFormData] = useState({
     tenant_slug: '',
     email: '',
     password: '',
   });
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +32,11 @@ export default function LoginPage() {
       await login(formData.email, formData.password, formData.tenant_slug);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur de connexion');
+      setError(err.message || 'Erreur de connexion');
     }
   };
+
+  const displayError = error || storeError;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -46,9 +52,9 @@ export default function LoginPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {error}
+            {displayError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+                {displayError}
               </div>
             )}
             

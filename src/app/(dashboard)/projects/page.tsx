@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useProjects, useDeleteProject } from '@/hooks/useProjects';
+import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, MoreVertical, Trash2, Eye, FolderKanban } from 'lucide-react';
@@ -25,11 +26,14 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function ProjectsPage() {
+  const { user } = useAuthStore();
   const { data: projects, isLoading } = useProjects();
   const deleteProject = useDeleteProject();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+
+  const isAdmin = user?.role === 'admin';
 
   const handleDelete = async () => {
     if (projectToDelete) {
@@ -52,12 +56,16 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Projets</h1>
-          <p className="text-gray-600 mt-1">Gérez tous vos projets</p>
+          <p className="text-gray-600 mt-1">
+            {isAdmin ? 'Gérez tous vos projets' : 'Vos projets avec tâches assignées'}
+          </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau Projet
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau Projet
+          </Button>
+        )}
       </div>
 
       {projects?.length === 0 ? (
@@ -65,15 +73,20 @@ export default function ProjectsPage() {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <FolderKanban className="h-16 w-16 text-gray-300 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Aucun projet pour le moment
+              {isAdmin ? 'Aucun projet pour le moment' : 'Aucun projet assigné'}
             </h3>
             <p className="text-gray-500 mb-4">
-              Commencez par créer votre premier projet
+              {isAdmin 
+                ? 'Commencez par créer votre premier projet'
+                : 'Vous n\'avez pas encore de tâches assignées dans un projet'
+              }
             </p>
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Créer un projet
-            </Button>
+            {isAdmin && (
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Créer un projet
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -100,31 +113,33 @@ export default function ProjectsPage() {
                         : 'Archivé'}
                     </span>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/projects/${project.id}`} className="flex items-center">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Voir détails
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setProjectToDelete(project.id);
-                          setDeleteDialogOpen(true);
-                        }}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Supprimer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {isAdmin && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/projects/${project.id}`} className="flex items-center">
+                            <Eye className="h-4 w-4 mr-2" />
+                            Voir détails
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setProjectToDelete(project.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -133,7 +148,7 @@ export default function ProjectsPage() {
                 </p>
                 <div className="flex items-center justify-between pt-4 border-t">
                   <span className="text-sm text-gray-500">
-                    {project.tasks?.length || 0} tâches
+                    {project.tasks?.length || 0} tâche{(project.tasks?.length || 0) > 1 ? 's' : ''}
                   </span>
                   <Link href={`/projects/${project.id}`}>
                     <Button variant="ghost" size="sm">
@@ -147,7 +162,7 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      <ProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      {isAdmin && <ProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

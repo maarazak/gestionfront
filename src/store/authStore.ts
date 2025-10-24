@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { api, ensureCSRFToken } from '@/lib/api';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/lib/constants';
+import axios from 'axios';
 
 interface User {
   id: string;
@@ -53,14 +54,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       
       if (typeof window !== 'undefined') {
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('token', data.data.token);
       }
       
-      set({ user: data.user, token: data.token });
+      set({ user: data.data.user, token: data.data.token });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : ERROR_MESSAGES.NETWORK_ERROR;
+      let errorMessage = ERROR_MESSAGES.NETWORK_ERROR;
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response?.data?.errors) {
+          // Gérer les erreurs de validation
+          const errors = error.response.data.errors;
+          errorMessage = Object.values(errors).flat().join(', ');
+        }
+      }
+      
       set({ error: errorMessage });
       throw new Error(errorMessage);
     } finally {
@@ -76,14 +86,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { data } = await api.post('/register', registerData);
       
       if (typeof window !== 'undefined') {
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('token', data.data.token);
       }
       
-      set({ user: data.user, token: data.token });
+      set({ user: data.data.user, token: data.data.token });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : ERROR_MESSAGES.NETWORK_ERROR;
+      let errorMessage = ERROR_MESSAGES.NETWORK_ERROR;
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response?.data?.errors) {
+          // Gérer les erreurs de validation
+          const errors = error.response.data.errors;
+          errorMessage = Object.values(errors).flat().join(', ');
+        }
+      }
+      
       set({ error: errorMessage });
       throw new Error(errorMessage);
     } finally {
@@ -101,7 +120,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   fetchUser: async () => {
     try {
       const { data } = await api.get('/me');
-      set({ user: data, error: null });
+      set({ user: data.data, error: null });
     } catch (error: unknown) {
       set({ user: null, token: null, error: ERROR_MESSAGES.UNAUTHORIZED });
       if (typeof window !== 'undefined') {

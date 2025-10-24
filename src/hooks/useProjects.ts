@@ -14,12 +14,18 @@ export interface Project {
   tasks?: Task[];
 }
 
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
 export const useProjects = () => {
   return useQuery({
     queryKey: QUERY_KEYS.PROJECTS,
     queryFn: async () => {
-      const { data } = await api.get<Project[]>('/projects');
-      return data;
+      const { data } = await api.get<ApiResponse<Project[]>>('/projects');
+      return data.data; 
     },
     staleTime: API_CONFIG.STALE_TIME,
     retry: API_CONFIG.RETRY_ATTEMPTS,
@@ -30,8 +36,8 @@ export const useProject = (id: string) => {
   return useQuery({
     queryKey: QUERY_KEYS.PROJECT(id),
     queryFn: async () => {
-      const { data } = await api.get<Project>(`/projects/${id}`);
-      return data;
+      const { data } = await api.get<ApiResponse<Project>>(`/projects/${id}`);
+      return data.data; 
     },
     enabled: !!id,
     staleTime: API_CONFIG.STALE_TIME,
@@ -45,8 +51,8 @@ export const useCreateProject = () => {
   return useMutation({
     mutationFn: async (projectData: Partial<Project>) => {
       await ensureCSRFToken();
-      const { data } = await api.post('/projects', projectData);
-      return data;
+      const { data } = await api.post<ApiResponse<Project>>('/projects', projectData);
+      return data.data; 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROJECTS });
@@ -63,8 +69,8 @@ export const useUpdateProject = () => {
   return useMutation({
     mutationFn: async ({ id, ...projectData }: Partial<Project> & { id: string }) => {
       await ensureCSRFToken();
-      const { data } = await api.put(`/projects/${id}`, projectData);
-      return data;
+      const { data } = await api.put<ApiResponse<Project>>(`/projects/${id}`, projectData);
+      return data.data; 
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROJECTS });

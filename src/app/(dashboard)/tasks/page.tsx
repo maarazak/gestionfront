@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
+import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
@@ -18,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 
 export default function TasksPage() {
+  const { user } = useAuthStore();
   const { data: tasks, isLoading } = useTasks();
   const { data: projects } = useProjects();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -25,6 +27,8 @@ export default function TasksPage() {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const isAdmin = user?.role === 'admin';
 
   if (isLoading) {
     return (
@@ -56,12 +60,16 @@ export default function TasksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Tâches</h1>
-          <p className="text-gray-600 mt-1">Gérez toutes vos tâches</p>
+          <p className="text-gray-600 mt-1">
+            {isAdmin ? 'Gérez toutes les tâches' : 'Vos tâches assignées'}
+          </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle Tâche
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle Tâche
+          </Button>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -179,11 +187,20 @@ export default function TasksPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <TaskList tasks={filteredTasks} />
+          {filteredTasks.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              {tasks?.length === 0 
+                ? (isAdmin ? 'Aucune tâche créée' : 'Aucune tâche assignée')
+                : 'Aucune tâche ne correspond aux filtres'
+              }
+            </div>
+          ) : (
+            <TaskList tasks={filteredTasks} />
+          )}
         </CardContent>
       </Card>
 
-      <TaskDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      {isAdmin && <TaskDialog open={dialogOpen} onOpenChange={setDialogOpen} />}
     </div>
   );
 }
