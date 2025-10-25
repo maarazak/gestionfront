@@ -58,15 +58,16 @@ export default function ProjectDetailPage() {
   }
 
   if (projectError) {
+    const status = (projectError as any).response?.status;
+    const message = (projectError as any).response?.data?.message;
+  
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <h2 className="text-2xl font-semibold text-foreground mb-4">
-          {projectError.response?.status === 403 
-            ? "Accès refusé" 
-            : "Projet non trouvé"}
+          {status === 403 ? "Accès refusé" : "Projet non trouvé"}
         </h2>
         <p className="text-muted-foreground mb-6">
-          {projectError.response?.data?.message || "Vous n'avez pas accès à ce projet."}
+          {message || "Vous n'avez pas accès à ce projet."}
         </p>
         <Link href="/projects">
           <Button>Retour aux projets</Button>
@@ -74,6 +75,7 @@ export default function ProjectDetailPage() {
       </div>
     );
   }
+  
 
   if (!project) {
     return (

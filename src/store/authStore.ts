@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { api, ensureCSRFToken } from '@/lib/api';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/lib/constants';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 interface User {
   id: string;
@@ -59,13 +59,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       set({ user: data.data.user, token: data.data.token });
     } catch (error: unknown) {
-      let errorMessage = ERROR_MESSAGES.NETWORK_ERROR;
+      let errorMessage: string = ERROR_MESSAGES.NETWORK_ERROR;
       
       if (axios.isAxiosError(error)) {
         if (error.response?.data?.message) {
           errorMessage = error.response.data.message;
         } else if (error.response?.data?.errors) {
-          // Gérer les erreurs de validation
           const errors = error.response.data.errors;
           errorMessage = Object.values(errors).flat().join(', ');
         }
@@ -91,13 +90,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       set({ user: data.data.user, token: data.data.token });
     } catch (error: unknown) {
-      let errorMessage = ERROR_MESSAGES.NETWORK_ERROR;
+      let errorMessage: string = ERROR_MESSAGES.NETWORK_ERROR;
       
       if (axios.isAxiosError(error)) {
         if (error.response?.data?.message) {
           errorMessage = error.response.data.message;
         } else if (error.response?.data?.errors) {
-          // Gérer les erreurs de validation
           const errors = error.response.data.errors;
           errorMessage = Object.values(errors).flat().join(', ');
         }
