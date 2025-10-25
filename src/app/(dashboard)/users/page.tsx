@@ -24,7 +24,7 @@ export default function UsersPage() {
   const deleteUser = useDeleteUser();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<number | null>(null);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
  
   if (currentUser?.role !== 'admin') {
@@ -107,7 +107,7 @@ export default function UsersPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        setUserToDelete(user.id);
+                        setUserToDelete(user.uuid);
                         setDeleteDialogOpen(true);
                       }}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"

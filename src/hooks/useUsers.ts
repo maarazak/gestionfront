@@ -54,9 +54,9 @@ export const useDeleteUser = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (userId: number) => {
+    mutationFn: async (userUuid: string) => {
       await ensureCSRFToken();
-      await api.delete(`/users/${userId}`);
+      await api.delete(`/users/${userUuid}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });

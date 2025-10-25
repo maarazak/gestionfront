@@ -90,7 +90,7 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
             key={task.id}
             className="flex items-start gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow bg-white"
           >
-            {/* Checkbox pour statut */}
+            
             <div className="flex items-start pt-1">
               <input
                 type="checkbox"
@@ -105,7 +105,7 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
               />
             </div>
 
-            {/* Contenu principal */}
+           
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
@@ -123,36 +123,35 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                   )}
                 </div>
                 
-                {isAdmin && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="flex-shrink-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditingTask(task)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Modifier
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setTaskToDelete(task.id);
-                          setDeleteDialogOpen(true);
-                        }}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Supprimer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="flex-shrink-0">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setEditingTask(task)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Modifier
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setTaskToDelete(task.id);
+                        setDeleteDialogOpen(true);
+                      }}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
-              {/* Métadonnées */}
+             
               <div className="flex flex-wrap items-center gap-2 mt-3">
-                {/* Projet */}
+               
                 {!projectId && task.project && (
                   <Link href={`/projects/${task.project_id}`}>
                     <Badge variant="outline" className="hover:bg-gray-50">
@@ -161,7 +160,7 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                   </Link>
                 )}
 
-                {/* Statut */}
+                
                 <select
                   value={task.status}
                   onChange={(e) => handleStatusChange(task.id, e.target.value as Task['status'])}
@@ -177,7 +176,7 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                   {task.priority === 'high' ? 'Haute' : task.priority === 'medium' ? 'Moyenne' : 'Basse'}
                 </Badge>
 
-                {/* Date d'échéance */}
+               
                 {task.due_date && (
                   <div className="flex items-center text-xs text-gray-500">
                     <Calendar className="h-3 w-3 mr-1" />
@@ -185,7 +184,7 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                   </div>
                 )}
 
-                {/* Assigné à */}
+               
                 {task.assigned_user && (
                   <div className="flex items-center text-xs text-gray-500">
                     <User className="h-3 w-3 mr-1" />
@@ -198,7 +197,7 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
         ))}
       </div>
 
-      {/* Edit Dialog */}
+    
       {editingTask && (
         <TaskDialog
           open={!!editingTask}
@@ -208,7 +207,7 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
         />
       )}
 
-      {/* Delete Dialog */}
+      
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

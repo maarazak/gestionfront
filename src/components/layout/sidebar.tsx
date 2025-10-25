@@ -1,20 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   FolderKanban, 
   CheckSquare,
   Users,
-  Building2
+  Building2,
+  LogOut,
+  UserCircle
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { Button } from '@/components/ui/button';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const router = useRouter();
+  const { user, logout } = useAuthStore();
 
   const isAdmin = user?.role === 'admin';
 
@@ -26,6 +30,11 @@ export function Sidebar() {
   ];
 
   const visibleNavigation = navigation.filter(item => !item.adminOnly || isAdmin);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   return (
     <div className="hidden md:flex md:flex-shrink-0">
@@ -72,6 +81,36 @@ export function Sidebar() {
               );
             })}
           </nav>
+          
+          {/* Section du bas avec Profil et Déconnexion */}
+          <div className="px-2 mt-auto space-y-1 pt-4 border-t">
+            <Link
+              href="/profile"
+              className={cn(
+                'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                pathname === '/profile'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+              )}
+            >
+              <UserCircle
+                className={cn(
+                  'mr-3 h-5 w-5 flex-shrink-0',
+                  pathname === '/profile' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-500'
+                )}
+              />
+              Mon Profil
+            </Link>
+            
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <LogOut className="mr-3 h-5 w-5" />
+              Déconnexion
+            </Button>
+          </div>
         </div>
       </div>
     </div>

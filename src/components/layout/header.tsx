@@ -2,24 +2,15 @@
 
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
-import { LogOut, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 export function Header() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
+  const handleProfileClick = () => {
+    router.push('/profile');
   };
 
   return (
@@ -34,30 +25,16 @@ export function Header() {
           </p>
         </div>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <User className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>{user?.email}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="capitalize">
-              <span className="mr-2 h-4 w-4 inline-block">👤</span>
-              <span>Rôle : {user?.role}</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Déconnexion</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button 
+          onClick={handleProfileClick}
+          variant="ghost" 
+          size="icon" 
+          className="relative rounded-full hover:bg-gray-100 transition-all duration-200 group"
+        >
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200">
+            <User className="h-5 w-5" />
+          </div>
+        </Button>
       </div>
     </header>
   );
