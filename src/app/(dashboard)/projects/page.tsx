@@ -28,22 +28,17 @@ export default function ProjectsPage() {
 
   const handleDelete = async (projectId: string, projectName: string) => {
     const result = await showDeleteConfirmAlert(
-      'Supprimer ce projet ?',
+      'Êtes-vous sûr?',
       `Le projet "${projectName}" et toutes ses tâches seront définitivement supprimés.`
     );
 
     if (result.isConfirmed) {
       try {
         await deleteProject.mutateAsync(projectId);
-        showSuccessAlert(
-          'Projet supprimé !',
-          'Le projet a été supprimé avec succès'
-        );
+        showSuccessAlert('Projet supprimé');
       } catch (error: any) {
-        showErrorAlert(
-          'Erreur de suppression',
-          error.message || 'Une erreur est survenue lors de la suppression du projet'
-        );
+        const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de la suppression';
+        showErrorAlert(errorMessage);
       }
     }
   };

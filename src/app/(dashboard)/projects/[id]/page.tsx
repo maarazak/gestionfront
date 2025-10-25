@@ -12,16 +12,7 @@ import { TaskDialog } from '@/components/tasks/task-dialog';
 import { TaskList } from '@/components/tasks/task-list';
 import { ProjectDialog } from '@/components/projects/project-dialog';
 import { useAuthStore } from '@/store/authStore';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { showDeleteConfirmAlert, showSuccessAlert, showErrorAlert } from '@/lib/alerts';
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -35,13 +26,24 @@ export default function ProjectDetailPage() {
   
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   const isAdmin = user?.role === 'admin';
 
   const handleDelete = async () => {
-    await deleteProject.mutateAsync(projectId);
-    router.push('/projects');
+    const result = await showDeleteConfirmAlert(
+      'Êtes-vous sûr?',
+      `Le projet "${project?.name}" et toutes ses tâches seront définitivement supprimés.`
+    );
+
+    if (result.isConfirmed) {
+      try {
+        await deleteProject.mutateAsync(projectId);
+        showSuccessAlert('Projet supprimé');
+        router.push('/projects');
+      } catch (error: any) {
+        showErrorAlert(error.message || 'Erreur lors de la suppression');
+      }
+    }
   };
 
   if (projectLoading || tasksLoading) {
@@ -52,7 +54,6 @@ export default function ProjectDetailPage() {
     );
   }
 
- 
   if (projectError) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -124,7 +125,7 @@ export default function ProjectDetailPage() {
               <Edit className="h-4 w-4 mr-2" />
               Modifier
             </Button>
-            <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+            <Button variant="destructive" onClick={handleDelete}>
               <Trash2 className="h-4 w-4 mr-2" />
               Supprimer
             </Button>
@@ -132,7 +133,6 @@ export default function ProjectDetailPage() {
         )}
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -176,7 +176,6 @@ export default function ProjectDetailPage() {
         </Card>
       </div>
 
-      {/* Tasks Section */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -205,26 +204,6 @@ export default function ProjectDetailPage() {
         onOpenChange={setEditDialogOpen}
         project={project}
       />
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Le projet "{project.name}" et toutes ses tâches seront supprimés.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

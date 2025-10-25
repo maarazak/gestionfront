@@ -12,18 +12,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { showDeleteConfirmAlert, showSuccessAlert, showErrorAlert } from '@/lib/alerts';
 
 interface TaskListProps {
   tasks: Task[];
@@ -35,8 +26,6 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   
   const isAdmin = user?.role === 'admin';
 
@@ -44,11 +33,19 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
     await updateTask.mutateAsync({ id: taskId, status: newStatus });
   };
 
-  const handleDelete = async () => {
-    if (taskToDelete) {
-      await deleteTask.mutateAsync(taskToDelete);
-      setDeleteDialogOpen(false);
-      setTaskToDelete(null);
+  const handleDelete = async (taskId: string, taskTitle: string) => {
+    const result = await showDeleteConfirmAlert(
+      'Êtes-vous sûr?',
+      `La tâche "${taskTitle}" sera définitivement supprimée.`
+    );
+
+    if (result.isConfirmed) {
+      try {
+        await deleteTask.mutateAsync(taskId);
+        showSuccessAlert('Tâche supprimée');
+      } catch (error: any) {
+        showErrorAlert(error.message || 'Erreur lors de la suppression');
+      }
     }
   };
 
@@ -90,7 +87,6 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
             key={task.id}
             className="flex items-start gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow bg-white"
           >
-            
             <div className="flex items-start pt-1">
               <input
                 type="checkbox"
@@ -105,7 +101,6 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
               />
             </div>
 
-           
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
@@ -123,7 +118,6 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                   )}
                 </div>
                 
-                
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="flex-shrink-0">
@@ -136,10 +130,7 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                       Modifier
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => {
-                        setTaskToDelete(task.id);
-                        setDeleteDialogOpen(true);
-                      }}
+                      onClick={() => handleDelete(task.id, task.title)}
                       className="text-red-600"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
@@ -149,9 +140,7 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                 </DropdownMenu>
               </div>
 
-             
               <div className="flex flex-wrap items-center gap-2 mt-3">
-               
                 {!projectId && task.project && (
                   <Link href={`/projects/${task.project_id}`}>
                     <Badge variant="outline" className="hover:bg-gray-50">
@@ -160,7 +149,6 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                   </Link>
                 )}
 
-                
                 <select
                   value={task.status}
                   onChange={(e) => handleStatusChange(task.id, e.target.value as Task['status'])}
@@ -171,12 +159,10 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                   <option value="done">Terminé</option>
                 </select>
 
-                {/* Priorité */}
                 <Badge className={getPriorityColor(task.priority)}>
                   {task.priority === 'high' ? 'Haute' : task.priority === 'medium' ? 'Moyenne' : 'Basse'}
                 </Badge>
 
-               
                 {task.due_date && (
                   <div className="flex items-center text-xs text-gray-500">
                     <Calendar className="h-3 w-3 mr-1" />
@@ -184,7 +170,6 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
                   </div>
                 )}
 
-               
                 {task.assigned_user && (
                   <div className="flex items-center text-xs text-gray-500">
                     <User className="h-3 w-3 mr-1" />
@@ -197,7 +182,6 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
         ))}
       </div>
 
-    
       {editingTask && (
         <TaskDialog
           open={!!editingTask}
@@ -206,27 +190,6 @@ export function TaskList({ tasks, projectId }: TaskListProps) {
           defaultProjectId={projectId}
         />
       )}
-
-      
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. La tâche sera définitivement supprimée.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

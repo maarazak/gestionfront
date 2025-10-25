@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { showSuccessAlert, showErrorAlert, showLoadingAlert, closeAlert } from '@/lib/alerts';
+import { showSuccessAlert, showErrorAlert } from '@/lib/alerts';
 
 interface InviteUserDialogProps {
   open: boolean;
@@ -31,48 +31,47 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
-      showErrorAlert(
-        'Champs requis',
-        'Veuillez remplir tous les champs du formulaire'
-      );
+    if (!formData.name.trim()) {
+      showErrorAlert('Le champ Nom complet est requis');
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      showErrorAlert('Le champ Email est requis');
+      return;
+    }
+
+    if (!formData.password.trim()) {
+      showErrorAlert('Le champ Mot de passe est requis');
       return;
     }
 
     if (formData.password.length < 8) {
-      showErrorAlert(
-        'Mot de passe trop court',
-        'Le mot de passe doit contenir au moins 8 caractères'
-      );
+      showErrorAlert('Le mot de passe doit contenir au moins 8 caractères');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      showErrorAlert(
-        'Email invalide',
-        'Veuillez entrer une adresse email valide'
-      );
+      showErrorAlert('Veuillez entrer une adresse email valide');
       return;
     }
 
-    showLoadingAlert('Invitation en cours...');
-
     try {
       await inviteUser.mutateAsync(formData);
-      closeAlert();
-      await showSuccessAlert(
-        'Utilisateur invité !',
-        `L'invitation a été envoyée à ${formData.email}`
-      );
+      await showSuccessAlert('Utilisateur invité');
       setFormData({ name: '', email: '', password: '' });
       onOpenChange(false);
     } catch (error: any) {
-      closeAlert();
-      showErrorAlert(
-        'Erreur lors de l\'invitation',
-        error.message || 'Une erreur est survenue lors de l\'invitation de l\'utilisateur'
-      );
+      const errorMessage = error.response?.data?.message || error.message || 'Une erreur est survenue';
+      
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        const firstError = Object.values(errors)[0];
+        showErrorAlert(Array.isArray(firstError) ? firstError[0] : firstError);
+      } else {
+        showErrorAlert(errorMessage);
+      }
     }
   };
 

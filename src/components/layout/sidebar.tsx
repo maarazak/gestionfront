@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
+import { showSuccessAlert } from '@/lib/alerts';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -31,8 +32,9 @@ export function Sidebar() {
 
   const visibleNavigation = navigation.filter(item => !item.adminOnly || isAdmin);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     logout();
+    await showSuccessAlert('Déconnexion réussie');
     router.push('/login');
   };
 
@@ -82,7 +84,6 @@ export function Sidebar() {
             })}
           </nav>
           
-          {/* Section du bas avec Profil et Déconnexion */}
           <div className="px-2 mt-auto space-y-1 pt-4 border-t">
             <Link
               href="/profile"

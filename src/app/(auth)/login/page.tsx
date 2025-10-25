@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2 } from 'lucide-react';
-import { showErrorAlert, showSuccessAlert, showLoadingAlert, closeAlert } from '@/lib/alerts';
+import { showErrorAlert, showSuccessAlert } from '@/lib/alerts';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,30 +27,28 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.tenant_slug || !formData.email || !formData.password) {
-      showErrorAlert(
-        'Champs requis',
-        'Veuillez remplir tous les champs du formulaire'
-      );
+    if (!formData.tenant_slug) {
+      showErrorAlert('Le champ Organisation est requis');
       return;
     }
     
-    showLoadingAlert('Connexion en cours...');
+    if (!formData.email) {
+      showErrorAlert('Le champ Email est requis');
+      return;
+    }
+    
+    if (!formData.password) {
+      showErrorAlert('Le champ Mot de passe est requis');
+      return;
+    }
     
     try {
       await login(formData.email, formData.password, formData.tenant_slug);
-      closeAlert();
-      await showSuccessAlert(
-        'Connexion réussie !',
-        'Vous allez être redirigé vers le tableau de bord'
-      );
+      await showSuccessAlert('Connexion réussie');
       router.push('/dashboard');
     } catch (err: any) {
-      closeAlert();
-      showErrorAlert(
-        'Erreur de connexion',
-        err.message || 'Identifiants incorrects ou organisation introuvable'
-      );
+      const errorMessage = err.response?.data?.message || err.message || 'Identifiants incorrects';
+      showErrorAlert(errorMessage);
     }
   };
 

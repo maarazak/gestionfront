@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { showSuccessAlert, showErrorAlert, showLoadingAlert, closeAlert } from '@/lib/alerts';
+import { showSuccessAlert, showErrorAlert } from '@/lib/alerts';
 
 interface ProjectDialogProps {
   open: boolean;
@@ -60,39 +60,31 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      showErrorAlert(
-        'Nom requis',
-        'Le nom du projet est obligatoire'
-      );
+      showErrorAlert('Le champ Nom du projet est requis');
       return;
     }
 
     setIsSubmitting(true);
-    showLoadingAlert(project ? 'Mise à jour du projet...' : 'Création du projet...');
 
     try {
       if (project) {
         await updateProject.mutateAsync({ id: project.id, ...formData });
-        closeAlert();
-        await showSuccessAlert(
-          'Projet modifié !',
-          'Le projet a été mis à jour avec succès'
-        );
+        await showSuccessAlert('Projet modifié');
       } else {
         await createProject.mutateAsync(formData);
-        closeAlert();
-        await showSuccessAlert(
-          'Projet créé !',
-          'Le nouveau projet a été créé avec succès'
-        );
+        await showSuccessAlert('Projet créé');
       }
       onOpenChange(false);
     } catch (error: any) {
-      closeAlert();
-      showErrorAlert(
-        'Erreur',
-        error.message || 'Une erreur est survenue lors de l\'enregistrement du projet'
-      );
+      const errorMessage = error.response?.data?.message || error.message || 'Une erreur est survenue';
+      
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        const firstError = Object.values(errors)[0];
+        showErrorAlert(Array.isArray(firstError) ? firstError[0] : firstError);
+      } else {
+        showErrorAlert(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -110,7 +102,7 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Nom du projet *</Label>
+              <Label htmlFor="name">Nom du projet</Label>
               <Input
                 id="name"
                 value={formData.name}

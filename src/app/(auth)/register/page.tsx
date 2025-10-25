@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2 } from 'lucide-react';
-import { showErrorAlert, showSuccessAlert, showLoadingAlert, closeAlert } from '@/lib/alerts';
+import { showErrorAlert, showSuccessAlert } from '@/lib/alerts';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -30,47 +30,60 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.tenant_name || !formData.tenant_slug || !formData.name || 
-        !formData.email || !formData.password || !formData.password_confirmation) {
-      showErrorAlert(
-        'Champs requis',
-        'Veuillez remplir tous les champs du formulaire'
-      );
+    if (!formData.tenant_name) {
+      showErrorAlert('Le champ Nom de l\'organisation est requis');
+      return;
+    }
+
+    if (!formData.tenant_slug) {
+      showErrorAlert('Le champ Slug est requis');
+      return;
+    }
+
+    if (!formData.name) {
+      showErrorAlert('Le champ Nom complet est requis');
+      return;
+    }
+
+    if (!formData.email) {
+      showErrorAlert('Le champ Email est requis');
+      return;
+    }
+
+    if (!formData.password) {
+      showErrorAlert('Le champ Mot de passe est requis');
       return;
     }
 
     if (formData.password.length < 8) {
-      showErrorAlert(
-        'Mot de passe trop court',
-        'Le mot de passe doit contenir au moins 8 caractères'
-      );
+      showErrorAlert('Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+
+    if (!formData.password_confirmation) {
+      showErrorAlert('Veuillez confirmer votre mot de passe');
       return;
     }
 
     if (formData.password !== formData.password_confirmation) {
-      showErrorAlert(
-        'Mots de passe différents',
-        'Les mots de passe ne correspondent pas'
-      );
+      showErrorAlert('Les mots de passe ne correspondent pas');
       return;
     }
 
-    showLoadingAlert('Création de votre organisation...');
-
     try {
       await register(formData);
-      closeAlert();
-      await showSuccessAlert(
-        'Organisation créée !',
-        'Bienvenue ! Vous allez être redirigé vers votre tableau de bord'
-      );
+      await showSuccessAlert('Organisation créée avec succès');
       router.push('/dashboard');
     } catch (err: any) {
-      closeAlert();
-      showErrorAlert(
-        'Erreur lors de l\'inscription',
-        err.message || 'Une erreur est survenue. Veuillez réessayer.'
-      );
+      const errorMessage = err.response?.data?.message || err.message || 'Une erreur est survenue';
+      
+      if (err.response?.data?.errors) {
+        const errors = err.response.data.errors;
+        const firstError = Object.values(errors)[0];
+        showErrorAlert(Array.isArray(firstError) ? firstError[0] : firstError);
+      } else {
+        showErrorAlert(errorMessage);
+      }
     }
   };
 

@@ -7,26 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Users as UsersIcon } from 'lucide-react';
 import { InviteUserDialog } from '@/components/users/invite-user-dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { showDeleteConfirmAlert, showSuccessAlert, showErrorAlert } from '@/lib/alerts';
 
 export default function UsersPage() {
   const { user: currentUser } = useAuthStore();
   const { data: users, isLoading } = useUsers();
   const deleteUser = useDeleteUser();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
- 
   if (currentUser?.role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -41,11 +29,20 @@ export default function UsersPage() {
     );
   }
 
-  const handleDelete = async () => {
-    if (userToDelete) {
-      await deleteUser.mutateAsync(userToDelete);
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
+  const handleDelete = async (userId: string, userName: string) => {
+    const result = await showDeleteConfirmAlert(
+      'Êtes-vous sûr?',
+      `L'utilisateur "${userName}" sera supprimé et n'aura plus accès à l'organisation.`
+    );
+
+    if (result.isConfirmed) {
+      try {
+        await deleteUser.mutateAsync(userId);
+        showSuccessAlert('Utilisateur supprimé');
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de la suppression';
+        showErrorAlert(errorMessage);
+      }
     }
   };
 
@@ -106,10 +103,7 @@ export default function UsersPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => {
-                        setUserToDelete(user.uuid);
-                        setDeleteDialogOpen(true);
-                      }}
+                      onClick={() => handleDelete(user.uuid, user.name)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -123,26 +117,6 @@ export default function UsersPage() {
       </Card>
 
       <InviteUserDialog open={dialogOpen} onOpenChange={setDialogOpen} />
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. L'utilisateur sera supprimé et n'aura plus accès à l'organisation.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

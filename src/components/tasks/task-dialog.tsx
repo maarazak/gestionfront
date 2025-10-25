@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { showSuccessAlert, showErrorAlert, showLoadingAlert, closeAlert } from '@/lib/alerts';
+import { showSuccessAlert, showErrorAlert } from '@/lib/alerts';
 
 interface TaskDialogProps {
   open: boolean;
@@ -84,31 +84,21 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
     e.preventDefault();
     
     if (!canModifyTask && !isEditingOwnTask) {
-      showErrorAlert(
-        'Action non autorisée',
-        'Vous n\'avez pas les permissions nécessaires'
-      );
+      showErrorAlert('Vous n\'avez pas les permissions nécessaires');
       return;
     }
 
     if (canModifyTask && !formData.title.trim()) {
-      showErrorAlert(
-        'Titre requis',
-        'Le titre de la tâche est obligatoire'
-      );
+      showErrorAlert('Le champ Titre est requis');
       return;
     }
 
     if (canModifyTask && !formData.project_id) {
-      showErrorAlert(
-        'Projet requis',
-        'Veuillez sélectionner un projet'
-      );
+      showErrorAlert('Veuillez sélectionner un projet');
       return;
     }
 
     setIsSubmitting(true);
-    showLoadingAlert(task ? 'Mise à jour de la tâche...' : 'Création de la tâche...');
 
     try {
       if (task) {
@@ -117,42 +107,30 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
             id: task.id, 
             status: formData.status 
           });
-          closeAlert();
-          await showSuccessAlert(
-            'Statut modifié !',
-            'Le statut de votre tâche a été mis à jour'
-          );
+          await showSuccessAlert('Statut modifié');
         } else if (canModifyTask) {
           await updateTask.mutateAsync({ id: task.id, ...formData });
-          closeAlert();
-          await showSuccessAlert(
-            'Tâche modifiée !',
-            'La tâche a été mise à jour avec succès'
-          );
+          await showSuccessAlert('Tâche modifiée');
         }
       } else {
         if (!canModifyTask) {
-          closeAlert();
-          showErrorAlert(
-            'Action non autorisée',
-            'Seuls les administrateurs et managers peuvent créer des tâches'
-          );
+          showErrorAlert('Seuls les administrateurs et managers peuvent créer des tâches');
           return;
         }
         await createTask.mutateAsync(formData);
-        closeAlert();
-        await showSuccessAlert(
-          'Tâche créée !',
-          'La nouvelle tâche a été créée avec succès'
-        );
+        await showSuccessAlert('Tâche créée');
       }
       onOpenChange(false);
     } catch (error: any) {
-      closeAlert();
-      showErrorAlert(
-        'Erreur',
-        error.message || 'Une erreur est survenue lors de l\'enregistrement de la tâche'
-      );
+      const errorMessage = error.response?.data?.message || error.message || 'Une erreur est survenue';
+      
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        const firstError = Object.values(errors)[0];
+        showErrorAlert(Array.isArray(firstError) ? firstError[0] : firstError);
+      } else {
+        showErrorAlert(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -178,7 +156,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
           <div className="grid gap-4 py-4">
             {canModifyTask && (
               <div className="grid gap-2">
-                <Label htmlFor="project_id">Projet *</Label>
+                <Label htmlFor="project_id">Projet</Label>
                 <Select
                   value={formData.project_id}
                   onValueChange={(value) => setFormData({ ...formData, project_id: value })}
@@ -201,7 +179,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
 
             {canModifyTask && (
               <div className="grid gap-2">
-                <Label htmlFor="title">Titre *</Label>
+                <Label htmlFor="title">Titre</Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -235,7 +213,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="status">Statut *</Label>
+              <Label htmlFor="status">Statut</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => setFormData({ ...formData, status: value as Task['status'] })}
@@ -272,7 +250,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="assigned_to">Assigner à *</Label>
+                  <Label htmlFor="assigned_to">Assigner à</Label>
                   <Select
                     value={formData.assigned_to}
                     onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
