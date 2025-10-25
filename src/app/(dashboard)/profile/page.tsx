@@ -20,11 +20,11 @@ export default function ProfilePage() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-purple-100 text-purple-700 hover:bg-purple-100';
+        return 'bg-primary/10 text-primary';
       case 'manager':
-        return 'bg-blue-100 text-blue-700 hover:bg-blue-100';
+        return 'bg-blue-500/10 text-blue-600';
       default:
-        return 'bg-gray-100 text-gray-700 hover:bg-gray-100';
+        return 'bg-secondary text-muted-foreground';
     }
   };
 
@@ -44,19 +44,19 @@ export default function ProfilePage() {
       return {
         access: 'Accès complet',
         description: 'Vous pouvez créer, modifier et supprimer des projets',
-        variant: 'bg-green-50 text-green-700 border-green-200'
+        variant: 'bg-emerald-100 text-emerald-700'
       };
     } else if (user?.role === 'manager') {
       return {
         access: 'Accès complet',
         description: 'Vous pouvez créer, modifier et supprimer des projets',
-        variant: 'bg-green-50 text-green-700 border-green-200'
+        variant: 'bg-emerald-100 text-emerald-700'
       };
     } else {
       return {
         access: 'Lecture seule',
         description: 'Vous pouvez uniquement voir les projets',
-        variant: 'bg-gray-50 text-gray-600 border-gray-200'
+        variant: 'bg-secondary text-muted-foreground'
       };
     }
   };
@@ -66,19 +66,19 @@ export default function ProfilePage() {
       return {
         access: 'Accès complet',
         description: 'Vous pouvez créer, modifier, supprimer et changer le statut des tâches',
-        variant: 'bg-green-50 text-green-700 border-green-200'
+        variant: 'bg-emerald-100 text-emerald-700'
       };
     } else if (user?.role === 'manager') {
       return {
         access: 'Accès complet',
         description: 'Vous pouvez créer, modifier, supprimer et changer le statut des tâches',
-        variant: 'bg-green-50 text-green-700 border-green-200'
+        variant: 'bg-emerald-100 text-emerald-700'
       };
     } else {
       return {
         access: 'Lecture et modification',
         description: 'Vous pouvez voir les tâches et modifier leur statut',
-        variant: 'bg-blue-50 text-blue-700 border-blue-200'
+        variant: 'bg-blue-100 text-blue-700'
       };
     }
   };
@@ -88,13 +88,13 @@ export default function ProfilePage() {
       return {
         access: 'Accès complet',
         description: 'Vous pouvez inviter, modifier et gérer tous les utilisateurs',
-        variant: 'bg-green-50 text-green-700 border-green-200'
+        variant: 'bg-emerald-100 text-emerald-700'
       };
     } else {
       return {
         access: 'Aucun accès',
         description: 'Vous ne pouvez pas accéder à la gestion des utilisateurs',
-        variant: 'bg-red-50 text-red-700 border-red-200'
+        variant: 'bg-red-100 text-red-700'
       };
     }
   };
@@ -104,73 +104,73 @@ export default function ProfilePage() {
   const userPerms = getUserPermissions();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
-        <p className="text-gray-500 mt-2">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">Mon Profil</h1>
+        <p className="text-muted-foreground mt-2">
           Gérez vos informations personnelles et vos paramètres de compte
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Informations personnelles</CardTitle>
-            <CardDescription>
+        <Card className="md:col-span-2 border-border shadow-soft">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold">Informations personnelles</CardTitle>
+            <CardDescription className="text-sm">
               Vos informations de base et votre rôle dans l'organisation
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold text-3xl shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-semibold text-3xl shadow-soft">
                 {user?.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-semibold text-gray-900">{user?.name}</h2>
+                <h2 className="text-xl font-semibold text-foreground">{user?.name}</h2>
                 <Badge className={`mt-2 ${getRoleBadgeColor(user?.role || '')}`}>
                   {getRoleLabel(user?.role || '')}
                 </Badge>
               </div>
             </div>
 
-            <div className="grid gap-4 pt-4 border-t">
-              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100">
+            <div className="grid gap-3 pt-4 border-t border-border">
+              <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
                   <Mail className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500">Email</p>
-                  <p className="text-base text-gray-900">{user?.email}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Email</p>
+                  <p className="text-sm text-foreground">{user?.email}</p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100">
-                  <Shield className="h-5 w-5 text-purple-600" />
+              <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Shield className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500">Rôle</p>
-                  <p className="text-base text-gray-900 capitalize">{getRoleLabel(user?.role || '')}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Rôle</p>
+                  <p className="text-sm text-foreground capitalize">{getRoleLabel(user?.role || '')}</p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-100">
-                  <User className="h-5 w-5 text-green-600" />
+              <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10">
+                  <User className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500">ID Utilisateur</p>
-                  <p className="text-base text-gray-900 font-mono">{user?.id}</p>
+                  <p className="text-xs font-medium text-muted-foreground">ID Utilisateur</p>
+                  <p className="text-xs text-muted-foreground font-mono">{user?.id}</p>
                 </div>
               </div>
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button className="flex-1" variant="outline">
+              <Button className="flex-1" variant="outline" size="sm">
                 <Edit className="mr-2 h-4 w-4" />
                 Modifier le profil
               </Button>
-              <Button className="flex-1" variant="outline">
+              <Button className="flex-1" variant="outline" size="sm">
                 <Key className="mr-2 h-4 w-4" />
                 Changer le mot de passe
               </Button>
@@ -178,38 +178,38 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Organisation</CardTitle>
-            <CardDescription>
+        <Card className="border-border shadow-soft">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold">Organisation</CardTitle>
+            <CardDescription className="text-sm">
               Informations sur votre organisation
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-white font-bold text-2xl shadow-lg">
+            <div className="flex h-16 w-16 items-center justify-center mx-auto rounded-2xl bg-primary text-primary-foreground font-semibold text-2xl shadow-soft">
               {user?.tenant.name.charAt(0).toUpperCase()}
             </div>
             
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-base font-semibold text-foreground">
                 {user?.tenant.name}
               </h3>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 @{user?.tenant.slug}
               </p>
             </div>
 
-            <div className="pt-4 border-t space-y-3">
-              <div className="flex items-center space-x-2 text-sm">
-                <Building2 className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">Organisation:</span>
-                <span className="font-medium text-gray-900">{user?.tenant.name}</span>
+            <div className="pt-4 border-t border-border space-y-3">
+              <div className="flex items-center gap-2 text-xs">
+                <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground">Organisation:</span>
+                <span className="font-medium text-foreground">{user?.tenant.name}</span>
               </div>
               
-              <div className="flex items-center space-x-2 text-sm">
-                <Calendar className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">Tenant ID:</span>
-                <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+              <div className="flex items-center gap-2 text-xs">
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground">Tenant ID:</span>
+                <span className="font-mono text-[10px] bg-secondary px-2 py-1 rounded">
                   {user?.tenant.id}
                 </span>
               </div>
@@ -218,42 +218,42 @@ export default function ProfilePage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Permissions et accès</CardTitle>
-          <CardDescription>
+      <Card className="border-border shadow-soft">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold">Permissions et accès</CardTitle>
+          <CardDescription className="text-sm">
             Vos droits d'accès dans l'application
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="p-4 border rounded-lg">
+            <div className="p-4 border border-border rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Projets</span>
+                <span className="text-sm font-medium text-foreground">Projets</span>
                 <Badge variant="outline" className={projectPerms.variant}>
                   {projectPerms.access}
                 </Badge>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 {projectPerms.description}
               </p>
             </div>
 
-            <div className="p-4 border rounded-lg">
+            <div className="p-4 border border-border rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Tâches</span>
+                <span className="text-sm font-medium text-foreground">Tâches</span>
                 <Badge variant="outline" className={taskPerms.variant}>
                   {taskPerms.access}
                 </Badge>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 {taskPerms.description}
               </p>
             </div>
 
-            <div className="p-4 border rounded-lg">
+            <div className="p-4 border border-border rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Utilisateurs</span>
+                <span className="text-sm font-medium text-foreground">Utilisateurs</span>
                 <Badge 
                   variant="outline" 
                   className={userPerms.variant}
@@ -261,7 +261,7 @@ export default function ProfilePage() {
                   {userPerms.access}
                 </Badge>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 {userPerms.description}
               </p>
             </div>

@@ -18,11 +18,13 @@ export default function UsersPage() {
   if (currentUser?.role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center h-full">
-        <UsersIcon className="h-16 w-16 text-gray-300 mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-6">
+          <UsersIcon className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-semibold text-foreground mb-2">
           Accès réservé aux administrateurs
         </h3>
-        <p className="text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Vous n'avez pas les permissions nécessaires pour accéder à cette page.
         </p>
       </div>
@@ -49,52 +51,55 @@ export default function UsersPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+          <p className="text-sm text-muted-foreground">Chargement...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Utilisateurs</h1>
-          <p className="text-gray-600 mt-1">Gérez les membres de votre organisation</p>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Utilisateurs</h1>
+          <p className="text-muted-foreground mt-2">Gérez les membres de votre organisation</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={() => setDialogOpen(true)} className="shadow-soft">
           <Plus className="h-4 w-4 mr-2" />
           Inviter un utilisateur
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Membres de l'équipe ({users?.length || 0})</CardTitle>
+      <Card className="border-border shadow-soft">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base font-semibold">Membres de l'équipe ({users?.length || 0})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-2">
             {users?.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-secondary/50 transition-all duration-200"
               >
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <span className="text-blue-600 font-semibold text-sm">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                    <span className="text-primary font-semibold text-sm">
                       {user.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">{user.name}</h4>
-                    <p className="text-sm text-gray-500">{user.email}</p>
+                    <h4 className="font-medium text-sm text-foreground">{user.name}</h4>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3">
                   <span
-                    className={`px-3 py-1 text-xs font-medium rounded-full ${
+                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded-md ${
                       user.role === 'admin'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'bg-blue-100 text-blue-700'
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-blue-500/10 text-blue-600'
                     }`}
                   >
                     {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
@@ -103,8 +108,8 @@ export default function UsersPage() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={() => handleDelete(user.uuid, user.name)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

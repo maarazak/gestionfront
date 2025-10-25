@@ -49,7 +49,10 @@ export default function ProjectDetailPage() {
   if (projectLoading || tasksLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+          <p className="text-sm text-muted-foreground">Chargement...</p>
+        </div>
       </div>
     );
   }
@@ -57,12 +60,12 @@ export default function ProjectDetailPage() {
   if (projectError) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <h2 className="text-2xl font-semibold text-foreground mb-4">
           {projectError.response?.status === 403 
             ? "Accès refusé" 
             : "Projet non trouvé"}
         </h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-muted-foreground mb-6">
           {projectError.response?.data?.message || "Vous n'avez pas accès à ce projet."}
         </p>
         <Link href="/projects">
@@ -75,7 +78,7 @@ export default function ProjectDetailPage() {
   if (!project) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Projet non trouvé</h2>
+        <h2 className="text-2xl font-semibold text-foreground mb-4">Projet non trouvé</h2>
         <Link href="/projects">
           <Button>Retour aux projets</Button>
         </Link>
@@ -91,25 +94,25 @@ export default function ProjectDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           <Link href="/projects">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
-            <p className="text-gray-600 mt-1">{project.description || 'Pas de description'}</p>
+            <h1 className="text-3xl font-semibold text-foreground tracking-tight">{project.name}</h1>
+            <p className="text-muted-foreground mt-1 text-sm">{project.description || 'Pas de description'}</p>
           </div>
           <span
-            className={`px-3 py-1 text-sm font-medium rounded-full ${
+            className={`px-2.5 py-0.5 text-[10px] font-medium rounded-md ${
               project.status === 'active'
-                ? 'bg-green-100 text-green-700'
+                ? 'bg-emerald-100 text-emerald-700'
                 : project.status === 'completed'
                 ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-700'
+                : 'bg-secondary text-muted-foreground'
             }`}
           >
             {project.status === 'active'
@@ -120,12 +123,12 @@ export default function ProjectDetailPage() {
           </span>
         </div>
         {isAdmin && (
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
               <Edit className="h-4 w-4 mr-2" />
               Modifier
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button variant="destructive" size="sm" onClick={handleDelete}>
               <Trash2 className="h-4 w-4 mr-2" />
               Supprimer
             </Button>
@@ -134,54 +137,54 @@ export default function ProjectDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-border shadow-soft">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Total
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{taskStats.total}</div>
+            <div className="text-3xl font-semibold tracking-tight">{taskStats.total}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-border shadow-soft">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               À faire
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-700">{taskStats.todo}</div>
+            <div className="text-3xl font-semibold tracking-tight text-muted-foreground">{taskStats.todo}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-border shadow-soft">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               En cours
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{taskStats.inProgress}</div>
+            <div className="text-3xl font-semibold tracking-tight text-blue-600">{taskStats.inProgress}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-border shadow-soft">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Terminées
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{taskStats.done}</div>
+            <div className="text-3xl font-semibold tracking-tight text-emerald-600">{taskStats.done}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="border-border shadow-soft">
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle>Tâches du projet</CardTitle>
+            <CardTitle className="text-base font-semibold">Tâches du projet</CardTitle>
             {isAdmin && (
-              <Button onClick={() => setTaskDialogOpen(true)}>
+              <Button onClick={() => setTaskDialogOpen(true)} size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Nouvelle Tâche
               </Button>

@@ -6,7 +6,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { TaskDialog } from '@/components/tasks/task-dialog';
 import { TaskList } from '@/components/tasks/task-list';
 import {
@@ -33,7 +33,10 @@ export default function TasksPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+          <p className="text-sm text-muted-foreground">Chargement...</p>
+        </div>
       </div>
     );
   }
@@ -56,74 +59,74 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tâches</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Tâches</h1>
+          <p className="text-muted-foreground mt-2">
             {isAdmin ? 'Gérez toutes les tâches' : 'Vos tâches assignées'}
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => setDialogOpen(true)} className="shadow-soft">
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle Tâche
           </Button>
         )}
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-border shadow-soft">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{taskStats.total}</div>
+            <div className="text-3xl font-semibold tracking-tight">{taskStats.total}</div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setStatusFilter('todo')}>
+        <Card className="cursor-pointer border-border shadow-soft hover:shadow-elevated transition-all duration-200" onClick={() => setStatusFilter('todo')}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">À faire</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">À faire</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-700">{taskStats.todo}</div>
+            <div className="text-3xl font-semibold tracking-tight text-muted-foreground">{taskStats.todo}</div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setStatusFilter('in_progress')}>
+        <Card className="cursor-pointer border-border shadow-soft hover:shadow-elevated transition-all duration-200" onClick={() => setStatusFilter('in_progress')}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">En cours</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">En cours</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{taskStats.inProgress}</div>
+            <div className="text-3xl font-semibold tracking-tight text-blue-600">{taskStats.inProgress}</div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setStatusFilter('done')}>
+        <Card className="cursor-pointer border-border shadow-soft hover:shadow-elevated transition-all duration-200" onClick={() => setStatusFilter('done')}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Terminées</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Terminées</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{taskStats.done}</div>
+            <div className="text-3xl font-semibold tracking-tight text-emerald-600">{taskStats.done}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtres</CardTitle>
+      <Card className="border-border shadow-soft">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base font-semibold">Filtres</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Rechercher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-sm"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-9 text-sm">
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
@@ -135,7 +138,7 @@ export default function TasksPage() {
             </Select>
 
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-9 text-sm">
                 <SelectValue placeholder="Priorité" />
               </SelectTrigger>
               <SelectContent>
@@ -147,7 +150,7 @@ export default function TasksPage() {
             </Select>
 
             <Select value={projectFilter} onValueChange={setProjectFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="h-9 text-sm">
                 <SelectValue placeholder="Projet" />
               </SelectTrigger>
               <SelectContent>
@@ -161,10 +164,11 @@ export default function TasksPage() {
             </Select>
           </div>
           {(statusFilter !== 'all' || priorityFilter !== 'all' || projectFilter !== 'all' || searchQuery) && (
-            <div className="mt-4">
+            <div>
               <Button
                 variant="outline"
                 size="sm"
+                className="h-8 text-xs"
                 onClick={() => {
                   setStatusFilter('all');
                   setPriorityFilter('all');
@@ -179,16 +183,15 @@ export default function TasksPage() {
         </CardContent>
       </Card>
 
-      {/* Tasks List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
+      <Card className="border-border shadow-soft">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base font-semibold">
             {filteredTasks.length} tâche{filteredTasks.length > 1 ? 's' : ''}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {filteredTasks.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-12 text-muted-foreground">
               {tasks?.length === 0 
                 ? (isAdmin ? 'Aucune tâche créée' : 'Aucune tâche assignée')
                 : 'Aucune tâche ne correspond aux filtres'
