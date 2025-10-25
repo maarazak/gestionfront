@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { showSuccessAlert, showErrorAlert, showLoadingAlert, closeAlert } from '@/lib/alerts';
 
 interface ProjectDialogProps {
   open: boolean;
@@ -57,17 +58,41 @@ export function ProjectDialog({ open, onOpenChange, project }: ProjectDialogProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.name.trim()) {
+      showErrorAlert(
+        'Nom requis',
+        'Le nom du projet est obligatoire'
+      );
+      return;
+    }
+
     setIsSubmitting(true);
+    showLoadingAlert(project ? 'Mise à jour du projet...' : 'Création du projet...');
 
     try {
       if (project) {
         await updateProject.mutateAsync({ id: project.id, ...formData });
+        closeAlert();
+        await showSuccessAlert(
+          'Projet modifié !',
+          'Le projet a été mis à jour avec succès'
+        );
       } else {
         await createProject.mutateAsync(formData);
+        closeAlert();
+        await showSuccessAlert(
+          'Projet créé !',
+          'Le nouveau projet a été créé avec succès'
+        );
       }
       onOpenChange(false);
-    } catch (error) {
-      console.error('Error saving project:', error);
+    } catch (error: any) {
+      closeAlert();
+      showErrorAlert(
+        'Erreur',
+        error.message || 'Une erreur est survenue lors de l\'enregistrement du projet'
+      );
     } finally {
       setIsSubmitting(false);
     }

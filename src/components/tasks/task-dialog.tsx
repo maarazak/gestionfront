@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { showSuccessAlert, showErrorAlert, showLoadingAlert, closeAlert } from '@/lib/alerts';
 
 interface TaskDialogProps {
   open: boolean;
@@ -39,9 +40,10 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
 
   const isAdmin = currentUser?.role === 'admin';
+  const isManager = currentUser?.role === 'manager';
+  const canModifyTask = isAdmin || isManager;
   const isEditingOwnTask = task && task.assigned_to === currentUser?.id?.toString();
 
   const [formData, setFormData] = useState({
@@ -80,38 +82,83 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!canModifyTask && !isEditingOwnTask) {
+      showErrorAlert(
+        'Action non autorisée',
+        'Vous n\'avez pas les permissions nécessaires'
+      );
+      return;
+    }
+
+    if (canModifyTask && !formData.title.trim()) {
+      showErrorAlert(
+        'Titre requis',
+        'Le titre de la tâche est obligatoire'
+      );
+      return;
+    }
+
+    if (canModifyTask && !formData.project_id) {
+      showErrorAlert(
+        'Projet requis',
+        'Veuillez sélectionner un projet'
+      );
+      return;
+    }
+
     setIsSubmitting(true);
-    setError('');
+    showLoadingAlert(task ? 'Mise à jour de la tâche...' : 'Création de la tâche...');
 
     try {
       if (task) {
-       
-        if (!isAdmin && isEditingOwnTask) {
+        if (!canModifyTask && isEditingOwnTask) {
           await updateTask.mutateAsync({ 
             id: task.id, 
             status: formData.status 
           });
-        } else if (isAdmin) {
+          closeAlert();
+          await showSuccessAlert(
+            'Statut modifié !',
+            'Le statut de votre tâche a été mis à jour'
+          );
+        } else if (canModifyTask) {
           await updateTask.mutateAsync({ id: task.id, ...formData });
+          closeAlert();
+          await showSuccessAlert(
+            'Tâche modifiée !',
+            'La tâche a été mise à jour avec succès'
+          );
         }
       } else {
-       
-        if (!isAdmin) {
-          setError('Seuls les administrateurs peuvent créer des tâches');
+        if (!canModifyTask) {
+          closeAlert();
+          showErrorAlert(
+            'Action non autorisée',
+            'Seuls les administrateurs et managers peuvent créer des tâches'
+          );
           return;
         }
         await createTask.mutateAsync(formData);
+        closeAlert();
+        await showSuccessAlert(
+          'Tâche créée !',
+          'La nouvelle tâche a été créée avec succès'
+        );
       }
       onOpenChange(false);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de l\'enregistrement');
+    } catch (error: any) {
+      closeAlert();
+      showErrorAlert(
+        'Erreur',
+        error.message || 'Une erreur est survenue lors de l\'enregistrement de la tâche'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
-  if (!isAdmin && task && !isEditingOwnTask) {
+  if (!canModifyTask && task && !isEditingOwnTask) {
     return null;
   }
 
@@ -122,20 +169,14 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
           <DialogTitle>{task ? 'Modifier la tâche' : 'Nouvelle tâche'}</DialogTitle>
           <DialogDescription>
             {task 
-              ? (isAdmin ? 'Modifiez les détails de la tâche' : 'Modifiez le statut de votre tâche')
+              ? (canModifyTask ? 'Modifiez les détails de la tâche' : 'Modifiez le statut de votre tâche')
               : 'Créez une nouvelle tâche et assignez-la à un membre'
             }
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
-                {error}
-              </div>
-            )}
-
-            {isAdmin && (
+            {canModifyTask && (
               <div className="grid gap-2">
                 <Label htmlFor="project_id">Projet *</Label>
                 <Select
@@ -158,7 +199,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
               </div>
             )}
 
-            {isAdmin && (
+            {canModifyTask && (
               <div className="grid gap-2">
                 <Label htmlFor="title">Titre *</Label>
                 <Input
@@ -171,7 +212,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
               </div>
             )}
 
-            {!isAdmin && task && (
+            {!canModifyTask && task && (
               <div className="grid gap-2">
                 <Label>Titre</Label>
                 <p className="text-sm text-gray-700 p-3 bg-gray-50 rounded border">
@@ -180,7 +221,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
               </div>
             )}
 
-            {isAdmin && (
+            {canModifyTask && (
               <div className="grid gap-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -211,7 +252,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultProjectId }: TaskD
               </Select>
             </div>
 
-            {isAdmin && (
+            {canModifyTask && (
               <>
                 <div className="grid gap-2">
                   <Label htmlFor="priority">Priorité</Label>

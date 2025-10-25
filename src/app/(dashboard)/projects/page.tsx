@@ -14,32 +14,37 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { showDeleteConfirmAlert, showSuccessAlert, showErrorAlert } from '@/lib/alerts';
 
 export default function ProjectsPage() {
   const { user } = useAuthStore();
   const { data: projects, isLoading } = useProjects();
   const deleteProject = useDeleteProject();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const canManageProjects = isAdmin || isManager;
 
-  const handleDelete = async () => {
-    if (projectToDelete) {
-      await deleteProject.mutateAsync(projectToDelete);
-      setDeleteDialogOpen(false);
-      setProjectToDelete(null);
+  const handleDelete = async (projectId: string, projectName: string) => {
+    const result = await showDeleteConfirmAlert(
+      'Supprimer ce projet ?',
+      `Le projet "${projectName}" et toutes ses tâches seront définitivement supprimés.`
+    );
+
+    if (result.isConfirmed) {
+      try {
+        await deleteProject.mutateAsync(projectId);
+        showSuccessAlert(
+          'Projet supprimé !',
+          'Le projet a été supprimé avec succès'
+        );
+      } catch (error: any) {
+        showErrorAlert(
+          'Erreur de suppression',
+          error.message || 'Une erreur est survenue lors de la suppression du projet'
+        );
+      }
     }
   };
 
@@ -57,10 +62,10 @@ export default function ProjectsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Projets</h1>
           <p className="text-gray-600 mt-1">
-            {isAdmin ? 'Gérez tous vos projets' : 'Vos projets avec tâches assignées'}
+            {canManageProjects ? 'Gérez tous vos projets' : 'Vos projets avec tâches assignées'}
           </p>
         </div>
-        {isAdmin && (
+        {canManageProjects && (
           <Button onClick={() => setDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nouveau Projet
@@ -73,15 +78,15 @@ export default function ProjectsPage() {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <FolderKanban className="h-16 w-16 text-gray-300 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {isAdmin ? 'Aucun projet pour le moment' : 'Aucun projet assigné'}
+              {canManageProjects ? 'Aucun projet pour le moment' : 'Aucun projet assigné'}
             </h3>
             <p className="text-gray-500 mb-4">
-              {isAdmin 
+              {canManageProjects 
                 ? 'Commencez par créer votre premier projet'
                 : 'Vous n\'avez pas encore de tâches assignées dans un projet'
               }
             </p>
-            {isAdmin && (
+            {canManageProjects && (
               <Button onClick={() => setDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Créer un projet
@@ -113,7 +118,7 @@ export default function ProjectsPage() {
                         : 'Archivé'}
                     </span>
                   </div>
-                  {isAdmin && (
+                  {canManageProjects && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -128,10 +133,7 @@ export default function ProjectsPage() {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => {
-                            setProjectToDelete(project.id);
-                            setDeleteDialogOpen(true);
-                          }}
+                          onClick={() => handleDelete(project.id, project.name)}
                           className="text-red-600"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -162,27 +164,7 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      {isAdmin && <ProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />}
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Le projet et toutes ses tâches seront supprimés.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {canManageProjects && <ProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />}
     </div>
   );
 }

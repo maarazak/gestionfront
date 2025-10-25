@@ -9,10 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2 } from 'lucide-react';
+import { showErrorAlert, showSuccessAlert, showLoadingAlert, closeAlert } from '@/lib/alerts';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, isLoading, error: storeError, clearError } = useAuthStore();
+  const { register, isLoading, clearError } = useAuthStore();
   const [formData, setFormData] = useState({
     tenant_name: '',
     tenant_slug: '',
@@ -21,7 +22,6 @@ export default function RegisterPage() {
     password: '',
     password_confirmation: '',
   });
-  const [error, setError] = useState('');
 
   useEffect(() => {
     clearError();
@@ -29,18 +29,48 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
-    if (formData.password !== formData.password_confirmation) {
-      setError('Les mots de passe ne correspondent pas');
+    if (!formData.tenant_name || !formData.tenant_slug || !formData.name || 
+        !formData.email || !formData.password || !formData.password_confirmation) {
+      showErrorAlert(
+        'Champs requis',
+        'Veuillez remplir tous les champs du formulaire'
+      );
       return;
     }
 
+    if (formData.password.length < 8) {
+      showErrorAlert(
+        'Mot de passe trop court',
+        'Le mot de passe doit contenir au moins 8 caractères'
+      );
+      return;
+    }
+
+    if (formData.password !== formData.password_confirmation) {
+      showErrorAlert(
+        'Mots de passe différents',
+        'Les mots de passe ne correspondent pas'
+      );
+      return;
+    }
+
+    showLoadingAlert('Création de votre organisation...');
+
     try {
       await register(formData);
+      closeAlert();
+      await showSuccessAlert(
+        'Organisation créée !',
+        'Bienvenue ! Vous allez être redirigé vers votre tableau de bord'
+      );
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de l\'inscription');
+      closeAlert();
+      showErrorAlert(
+        'Erreur lors de l\'inscription',
+        err.message || 'Une erreur est survenue. Veuillez réessayer.'
+      );
     }
   };
 
@@ -53,28 +83,22 @@ export default function RegisterPage() {
       .replace(/(^-|-$)/g, '');
   };
 
-  const displayError = error || storeError;
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader className="space-y-1 pb-6">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-12 w-12 text-blue-600" />
+            <div className="p-3 bg-blue-100 rounded-2xl">
+              <Building2 className="h-12 w-12 text-blue-600" />
+            </div>
           </div>
-          <CardTitle className="text-2xl text-center">Créer une organisation</CardTitle>
+          <CardTitle className="text-3xl text-center font-bold">Créer une organisation</CardTitle>
           <CardDescription className="text-center">
             Démarrez avec votre espace multi-tenant
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {displayError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
-                {displayError}
-              </div>
-            )}
-
+          <CardContent className="space-y-6 py-6">
             <div className="space-y-2">
               <Label htmlFor="tenant_name">Nom de l'organisation</Label>
               <Input
@@ -90,6 +114,7 @@ export default function RegisterPage() {
                   });
                 }}
                 required
+                className="h-11"
               />
             </div>
 
@@ -101,72 +126,81 @@ export default function RegisterPage() {
                 value={formData.tenant_slug}
                 onChange={(e) => setFormData({ ...formData, tenant_slug: e.target.value })}
                 required
+                className="h-11"
               />
-              <p className="text-xs text-gray-500">
-                Utilisé pour identifier votre organisation (lettres minuscules, chiffres et tirets uniquement)
+              <p className="text-xs text-gray-500 mt-1">
+                Utilisé pour identifier votre organisation
               </p>
             </div>
 
-            <div className="border-t pt-4 mt-4">
-              <p className="text-sm font-medium mb-3">Compte administrateur</p>
+            <div className="border-t pt-6 mt-6">
+              <p className="text-sm font-semibold mb-5 text-gray-700">Compte administrateur</p>
               
-              <div className="space-y-2">
-                <Label htmlFor="name">Nom complet</Label>
-                <Input
-                  id="name"
-                  placeholder="Jean Dupont"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nom complet</Label>
+                  <Input
+                    id="name"
+                    placeholder="Jean Dupont"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                    className="h-11"
+                  />
+                </div>
 
-              <div className="space-y-2 mt-3">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="jean@exemple.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="jean@exemple.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    className="h-11"
+                  />
+                </div>
 
-              <div className="space-y-2 mt-3">
-                <Label htmlFor="password">Mot de passe</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                  minLength={8}
-                />
-                <p className="text-xs text-gray-500">
-                  Minimum 8 caractères
-                </p>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mot de passe</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                    minLength={8}
+                    className="h-11"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Minimum 8 caractères
+                  </p>
+                </div>
 
-              <div className="space-y-2 mt-3">
-                <Label htmlFor="password_confirmation">Confirmer le mot de passe</Label>
-                <Input
-                  id="password_confirmation"
-                  type="password"
-                  value={formData.password_confirmation}
-                  onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
-                  required
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="password_confirmation">Confirmer le mot de passe</Label>
+                  <Input
+                    id="password_confirmation"
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.password_confirmation}
+                    onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
+                    required
+                    className="h-11"
+                  />
+                </div>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+          <CardFooter className="flex flex-col space-y-4 pt-6">
+            <Button type="submit" className="w-full h-11 text-base" disabled={isLoading}>
               {isLoading ? 'Création...' : 'Créer l\'organisation'}
             </Button>
             <p className="text-sm text-center text-gray-600">
               Déjà un compte ?{' '}
-              <Link href="/login" className="text-blue-600 hover:underline">
+              <Link href="/login" className="text-blue-600 hover:underline font-semibold">
                 Se connecter
               </Link>
             </p>

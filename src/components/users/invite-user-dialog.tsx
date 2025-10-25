@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { showSuccessAlert, showErrorAlert, showLoadingAlert, closeAlert } from '@/lib/alerts';
 
 interface InviteUserDialogProps {
   open: boolean;
@@ -26,18 +27,52 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
     email: '',
     password: '',
   });
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
+      showErrorAlert(
+        'Champs requis',
+        'Veuillez remplir tous les champs du formulaire'
+      );
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      showErrorAlert(
+        'Mot de passe trop court',
+        'Le mot de passe doit contenir au moins 8 caractères'
+      );
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      showErrorAlert(
+        'Email invalide',
+        'Veuillez entrer une adresse email valide'
+      );
+      return;
+    }
+
+    showLoadingAlert('Invitation en cours...');
 
     try {
       await inviteUser.mutateAsync(formData);
+      closeAlert();
+      await showSuccessAlert(
+        'Utilisateur invité !',
+        `L'invitation a été envoyée à ${formData.email}`
+      );
       setFormData({ name: '', email: '', password: '' });
       onOpenChange(false);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de l\'invitation');
+    } catch (error: any) {
+      closeAlert();
+      showErrorAlert(
+        'Erreur lors de l\'invitation',
+        error.message || 'Une erreur est survenue lors de l\'invitation de l\'utilisateur'
+      );
     }
   };
 
@@ -53,12 +88,6 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
-                {error}
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="name">Nom complet</Label>
               <Input

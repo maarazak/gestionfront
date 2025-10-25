@@ -9,16 +9,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2 } from 'lucide-react';
+import { showErrorAlert, showSuccessAlert, showLoadingAlert, closeAlert } from '@/lib/alerts';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading, error: storeError, clearError } = useAuthStore();
+  const { login, isLoading, clearError } = useAuthStore();
   const [formData, setFormData] = useState({
     tenant_slug: '',
     email: '',
     password: '',
   });
-  const [error, setError] = useState('');
 
   useEffect(() => {
     clearError();
@@ -26,38 +26,50 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    
+    if (!formData.tenant_slug || !formData.email || !formData.password) {
+      showErrorAlert(
+        'Champs requis',
+        'Veuillez remplir tous les champs du formulaire'
+      );
+      return;
+    }
+    
+    showLoadingAlert('Connexion en cours...');
     
     try {
       await login(formData.email, formData.password, formData.tenant_slug);
+      closeAlert();
+      await showSuccessAlert(
+        'Connexion réussie !',
+        'Vous allez être redirigé vers le tableau de bord'
+      );
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Erreur de connexion');
+      closeAlert();
+      showErrorAlert(
+        'Erreur de connexion',
+        err.message || 'Identifiants incorrects ou organisation introuvable'
+      );
     }
   };
 
-  const displayError = error || storeError;
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader className="space-y-1 pb-6">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-12 w-12 text-blue-600" />
+            <div className="p-3 bg-blue-100 rounded-2xl">
+              <Building2 className="h-12 w-12 text-blue-600" />
+            </div>
           </div>
-          <CardTitle className="text-2xl text-center">Connexion</CardTitle>
+          <CardTitle className="text-3xl text-center font-bold">Connexion</CardTitle>
           <CardDescription className="text-center">
             Connectez-vous à votre espace multi-tenant
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {displayError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
-                {displayError}
-              </div>
-            )}
-            
+          <CardContent className="space-y-6 py-6">
             <div className="space-y-2">
               <Label htmlFor="tenant_slug">Organisation (slug)</Label>
               <Input
@@ -66,6 +78,7 @@ export default function LoginPage() {
                 value={formData.tenant_slug}
                 onChange={(e) => setFormData({ ...formData, tenant_slug: e.target.value })}
                 required
+                className="h-11"
               />
             </div>
 
@@ -78,6 +91,7 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
+                className="h-11"
               />
             </div>
 
@@ -86,19 +100,21 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
+                className="h-11"
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+          <CardFooter className="flex flex-col space-y-4 pt-6">
+            <Button type="submit" className="w-full h-11 text-base" disabled={isLoading}>
               {isLoading ? 'Connexion...' : 'Se connecter'}
             </Button>
             <p className="text-sm text-center text-gray-600">
               Pas encore de compte ?{' '}
-              <Link href="/register" className="text-blue-600 hover:underline">
+              <Link href="/register" className="text-blue-600 hover:underline font-semibold">
                 Créer une organisation
               </Link>
             </p>
