@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { api, ensureCSRFToken } from '@/lib/api';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/lib/constants';
-import axios, { AxiosError } from 'axios';
+import { ERROR_MESSAGES } from '@/lib/constants';
+import axios from 'axios';
 import { Tenant } from '@/types/api';
 
 interface User {
@@ -10,7 +10,6 @@ interface User {
   name: string;
   email: string;
   role: string;
-  tenant: Tenant;
   current_tenant: Tenant;
   tenants: Tenant[];
 }
@@ -147,9 +146,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       set({ user: data.data, error: null });
       
-      if (typeof window !== 'undefined') {
-        window.location.reload();
-      }
     } catch (error: unknown) {
       let errorMessage: string = ERROR_MESSAGES.NETWORK_ERROR;
       

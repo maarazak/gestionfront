@@ -187,15 +187,15 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex h-16 w-16 items-center justify-center mx-auto rounded-2xl bg-primary text-primary-foreground font-semibold text-2xl shadow-soft">
-              {user?.tenant.name.charAt(0).toUpperCase()}
+              {user?.current_tenant.name.charAt(0).toUpperCase()}
             </div>
             
             <div className="text-center">
               <h3 className="text-base font-semibold text-foreground">
-                {user?.tenant.name}
+                {user?.current_tenant.name}
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                @{user?.tenant.slug}
+                @{user?.current_tenant.slug}
               </p>
             </div>
 
@@ -203,14 +203,14 @@ export default function ProfilePage() {
               <div className="flex items-center gap-2 text-xs">
                 <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-muted-foreground">Organisation:</span>
-                <span className="font-medium text-foreground">{user?.tenant.name}</span>
+                <span className="font-medium text-foreground">{user?.current_tenant.name}</span>
               </div>
               
               <div className="flex items-center gap-2 text-xs">
                 <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-muted-foreground">Tenant ID:</span>
                 <span className="font-mono text-[10px] bg-secondary px-2 py-1 rounded">
-                  {user?.tenant.id}
+                  {user?.current_tenant.id}
                 </span>
               </div>
             </div>

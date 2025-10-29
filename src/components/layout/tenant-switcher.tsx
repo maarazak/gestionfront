@@ -6,13 +6,15 @@ import { Building2, Check, ChevronDown, Settings } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/lib/alerts';
+import { useTenantSwitch } from '@/hooks/useTenantSwitch';
 
 export function TenantSwitcher() {
-  const { user, switchTenant } = useAuthStore();
+  const { user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { handleSwitchTenant } = useTenantSwitch();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -34,7 +36,7 @@ export function TenantSwitcher() {
     return null;
   }
 
-  const handleSwitchTenant = async (tenantId: string) => {
+  const onSwitchTenant = async (tenantId: string) => {
     if (tenantId === user.current_tenant?.id) {
       setIsOpen(false);
       return;
@@ -44,7 +46,7 @@ export function TenantSwitcher() {
     setIsOpen(false);
     
     try {
-      await switchTenant(tenantId);
+      await handleSwitchTenant(tenantId);
       toast.success('Organisation changée avec succès');
     } catch (error) {
       toast.error('Erreur lors du changement d\'organisation');
@@ -54,7 +56,7 @@ export function TenantSwitcher() {
   };
 
   const userTenants = user.tenants || [];
-  const currentTenant = user.current_tenant || user.tenant;
+  const currentTenant = user.current_tenant;
   const isAdmin = user.role === 'admin';
 
   return (
@@ -85,7 +87,7 @@ export function TenantSwitcher() {
                 {userTenants.map((tenant) => (
                   <button
                     key={tenant.id}
-                    onClick={() => handleSwitchTenant(tenant.id)}
+                    onClick={() => onSwitchTenant(tenant.id)}
                     className="w-full flex items-center justify-between px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer transition-colors"
                   >
                     <div className="flex flex-col items-start">
@@ -110,7 +112,7 @@ export function TenantSwitcher() {
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    router.push('/tenants');
+                    router.push('/dashboard/tenants');
                   }}
                   className="w-full flex items-center px-2 py-2 text-sm rounded-sm hover:bg-accent cursor-pointer transition-colors text-primary"
                 >

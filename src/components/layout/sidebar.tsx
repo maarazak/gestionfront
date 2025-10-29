@@ -43,17 +43,17 @@ export function Sidebar() {
   return (
     <div className="hidden md:flex md:flex-shrink-0">
       <div className="flex flex-col w-[240px] border-r border-border bg-gradient-to-b from-slate-50 to-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5"></div>
         
-        <div className="flex flex-col h-full relative z-10">
+        <div className="relative z-10 flex flex-col h-full">
           <div className="px-3 py-6">
             <div className="flex items-center gap-3 px-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg">
-                <Sparkles className="h-5 w-5" />
+              <div className="flex items-center justify-center text-white shadow-lg h-9 w-9 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600">
+                <Sparkles className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <h2 className="text-sm font-semibold text-foreground leading-none">
-                  {user?.tenant.name}
+                <h2 className="text-sm font-semibold leading-none text-foreground">
+                  {user?.current_tenant.name}
                 </h2>
                 {isAdmin && (
                   <span className="text-[10px] text-primary mt-1 uppercase tracking-wider font-medium">
@@ -91,16 +91,16 @@ export function Sidebar() {
                         ? `bg-gradient-to-br ${item.gradient} text-white shadow-md`
                         : 'bg-secondary/50 group-hover:bg-secondary'
                     )}>
-                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      <item.icon className="flex-shrink-0 w-4 h-4" />
                     </div>
-                    <span className="flex-1 relative z-10">{item.name}</span>
+                    <span className="relative z-10 flex-1">{item.name}</span>
                   </Link>
                 );
               })}
             </div>
           </nav>
 
-          <div className="border-t border-border px-3 py-3 bg-gradient-to-t from-slate-50 to-transparent">
+          <div className="px-3 py-3 border-t border-border bg-gradient-to-t from-slate-50 to-transparent">
             <div className="space-y-1">
               <Link
                 href="/profile"
@@ -117,7 +117,7 @@ export function Sidebar() {
                     ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md'
                     : 'bg-secondary/50 group-hover:bg-secondary'
                 )}>
-                  <UserCircle className="h-4 w-4 flex-shrink-0" />
+                  <UserCircle className="flex-shrink-0 w-4 h-4" />
                 </div>
                 <span className="flex-1 truncate">{user?.name}</span>
               </Link>
@@ -125,10 +125,10 @@ export function Sidebar() {
               <Button
                 onClick={handleLogout}
                 variant="ghost"
-                className="w-full justify-start h-10 px-3 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-red-50 rounded-xl"
+                className="justify-start w-full h-10 px-3 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-red-50 rounded-xl"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors mr-3">
-                  <LogOut className="h-4 w-4 text-red-600" />
+                <div className="flex items-center justify-center w-8 h-8 mr-3 transition-colors rounded-lg bg-red-50 group-hover:bg-red-100">
+                  <LogOut className="w-4 h-4 text-red-600" />
                 </div>
                 Déconnexion
               </Button>

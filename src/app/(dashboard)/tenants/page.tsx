@@ -165,7 +165,7 @@ export default function TenantsPage() {
                       <Settings className="mr-2 h-4 w-4" />
                       Modifier
                     </Button>
-                    {tenant.id !== user?.tenant?.id && (
+                    {tenant.id !== user?.current_tenant?.id && (
                       <Button
                         variant="outline"
                         size="sm"

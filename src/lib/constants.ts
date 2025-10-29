@@ -9,6 +9,9 @@ export const QUERY_KEYS = {
   TASKS: ['tasks'] as const,
   TASK: (id: string) => ['tasks', id] as const,
   USER: ['user'] as const,
+  USERS: ['users'] as const,
+  TENANTS: ['tenants'] as const,
+  TENANT: (id: string) => ['tenants', id] as const,
 } as const;
 
 // Routes de l'application
