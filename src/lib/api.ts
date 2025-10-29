@@ -9,33 +9,54 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Fonction utilitaire pour initialiser le CSRF avant les requêtes POST/PUT/DELETE
+// Variable pour suivre si le CSRF a été initialisé
+let csrfInitialized = false;
+let csrfInitPromise: Promise<void> | null = null;
+
+// Fonction utilitaire pour initialiser le CSRF
 export const ensureCSRFToken = async (): Promise<void> => {
-  try {
-    const baseURL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
-    
-    // Créer une instance axios temporaire pour cette requête
-    const csrfClient = axios.create({
-      baseURL,
-      withCredentials: true,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    const response = await csrfClient.get('/sanctum/csrf-cookie');
-    
-    // Stocker le token CSRF pour l'utiliser dans les headers
-    if (response.data.csrf_token) {
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('csrf_token', response.data.csrf_token);
-      }
-    }
-  } catch (error) {
-    console.error('Failed to initialize CSRF token:', error);
-    throw error;
+  // Si déjà initialisé, ne rien faire
+  if (csrfInitialized) {
+    return;
   }
+
+  // Si une initialisation est en cours, attendre sa fin
+  if (csrfInitPromise) {
+    return csrfInitPromise;
+  }
+
+  // Créer une nouvelle promesse d'initialisation
+  csrfInitPromise = (async () => {
+    try {
+      const baseURL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
+      
+      const csrfClient = axios.create({
+        baseURL,
+        withCredentials: true,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const response = await csrfClient.get('/sanctum/csrf-cookie');
+      
+      if (response.data.csrf_token) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('csrf_token', response.data.csrf_token);
+        }
+      }
+      
+      csrfInitialized = true;
+    } catch (error) {
+      console.error('Failed to initialize CSRF token:', error);
+      throw error;
+    } finally {
+      csrfInitPromise = null;
+    }
+  })();
+
+  return csrfInitPromise;
 };
 
 // Fonction pour récupérer le token CSRF
@@ -61,17 +82,24 @@ const removeToken = (): void => {
   }
 };
 
-// Intercepteur pour ajouter le token
-api.interceptors.request.use((config) => {
+// Intercepteur pour ajouter le token et gérer le CSRF automatiquement
+api.interceptors.request.use(async (config) => {
   const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // Ajouter le token CSRF pour les requêtes POST/PUT/DELETE
-  const csrfToken = getCSRFToken();
-  if (csrfToken && ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase() || '')) {
-    config.headers['X-CSRF-TOKEN'] = csrfToken;
+  // Pour les requêtes qui modifient les données, s'assurer que le CSRF est initialisé
+  const method = config.method?.toLowerCase() || '';
+  if (['post', 'put', 'delete', 'patch'].includes(method)) {
+    // Initialiser le CSRF si nécessaire (ne fait rien si déjà fait)
+    await ensureCSRFToken();
+    
+    // Ajouter le token CSRF
+    const csrfToken = getCSRFToken();
+    if (csrfToken) {
+      config.headers['X-CSRF-TOKEN'] = csrfToken;
+    }
   }
   
   return config;
@@ -81,7 +109,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-   
+    // Si erreur 419 (CSRF token mismatch), réinitialiser le CSRF
+    if (error.response?.status === 419) {
+      csrfInitialized = false;
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('csrf_token');
+      }
+    }
+    
     if (error.response?.status === 401) {
       removeToken();
       if (typeof window !== 'undefined') {
@@ -91,4 +126,3 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-

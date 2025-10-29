@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, ensureCSRFToken } from '@/lib/api';
+import { useGenericQuery, useGenericCreate, useGenericDelete } from './useGenericApi';
+import { QUERY_KEYS } from '@/lib/constants';
 
 export interface User {
   id: number;
@@ -10,59 +10,48 @@ export interface User {
   created_at: string;
 }
 
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
-
 interface InviteUserData {
   name: string;
   email: string;
   password: string;
 }
 
+/**
+ * Récupérer tous les utilisateurs
+ */
 export const useUsers = () => {
-  return useQuery({
-    queryKey: ['users'],
-    queryFn: async () => {
-      const { data } = await api.get<ApiResponse<User[]>>('/users');
-      return data.data;
-    },
-  });
+  return useGenericQuery<User[]>(
+    QUERY_KEYS.USERS,
+    '/users'
+  );
 };
 
+/**
+ * Inviter un nouvel utilisateur
+ */
 export const useInviteUser = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (userData: InviteUserData) => {
-      await ensureCSRFToken();
-      const { data } = await api.post<ApiResponse<User>>('/users/invite', userData);
-      return data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-    onError: (error) => {
-      console.error('Error inviting user:', error);
-    },
-  });
+  return useGenericCreate<User, InviteUserData>(
+    '/users/invite',
+    [QUERY_KEYS.USERS],
+    {
+      onError: (error) => {
+        console.error('Error inviting user:', error);
+      },
+    }
+  );
 };
 
+/**
+ * Supprimer un utilisateur
+ */
 export const useDeleteUser = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (userUuid: string) => {
-      await ensureCSRFToken();
-      await api.delete(`/users/${userUuid}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-    onError: (error) => {
-      console.error('Error deleting user:', error);
-    },
-  });
+  return useGenericDelete(
+    (userUuid) => `/users/${userUuid}`,
+    [QUERY_KEYS.USERS],
+    {
+      onError: (error) => {
+        console.error('Error deleting user:', error);
+      },
+    }
+  );
 };

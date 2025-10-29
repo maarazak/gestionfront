@@ -1,5 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, ensureCSRFToken } from '@/lib/api';
+import { useGenericQuery, useGenericCreate, useGenericUpdate, useGenericDelete } from './useGenericApi';
+import { api } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
+import { API_CONFIG } from '@/lib/constants';
 
 export interface Task {
   id: string;
@@ -30,62 +32,64 @@ interface ApiResponse<T> {
   data: T;
 }
 
+/**
+ * Récupérer toutes les tâches (avec filtre optionnel par projet)
+ * Note: Ce hook ne peut pas utiliser useGenericQuery car il a besoin de paramètres dynamiques
+ */
 export const useTasks = (projectId?: string) => {
   return useQuery({
     queryKey: ['tasks', projectId],
     queryFn: async () => {
       const params = projectId ? { project_id: projectId } : {};
       const { data } = await api.get<ApiResponse<Task[]>>('/tasks', { params });
-      return data.data; 
+      return data.data;
     },
+    staleTime: API_CONFIG.STALE_TIME,
+    retry: API_CONFIG.RETRY_ATTEMPTS,
   });
 };
 
+/**
+ * Créer une nouvelle tâche
+ */
 export const useCreateTask = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (taskData: Partial<Task>) => {
-      await ensureCSRFToken();
-      const { data } = await api.post<ApiResponse<Task>>('/tasks', taskData);
-      return data.data; 
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      if (variables.project_id) {
-        queryClient.invalidateQueries({ queryKey: ['projects', variables.project_id] });
-      }
-    },
-  });
+  return useGenericCreate<Task>(
+    '/tasks',
+    [['tasks']],
+    {
+      onSuccess: (_, variables) => {
+        // Pas besoin d'invalidation supplémentaire, déjà géré par useGenericCreate
+      },
+    }
+  );
 };
 
+/**
+ * Mettre à jour une tâche
+ */
 export const useUpdateTask = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ id, ...taskData }: Partial<Task> & { id: string }) => {
-      await ensureCSRFToken();
-      const { data } = await api.put<ApiResponse<Task>>(`/tasks/${id}`, taskData);
-      return data.data; 
-    },
-    onSuccess: (task) => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['projects', task.project_id] });
-    },
-  });
+  return useGenericUpdate<Task, Partial<Task> & { id: string }>(
+    (id) => `/tasks/${id}`,
+    (variables) => [['tasks'], ['projects', variables.project_id]],
+    {
+      onError: (error) => {
+        console.error('Error updating task:', error);
+      },
+    }
+  );
 };
 
+/**
+ * Supprimer une tâche
+ */
 export const useDeleteTask = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await ensureCSRFToken();
-      await api.delete(`/tasks/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-    },
-  });
+  return useGenericDelete(
+    (id) => `/tasks/${id}`,
+    [['tasks'], ['projects']],
+    {
+      onError: (error) => {
+        console.error('Error deleting task:', error);
+      },
+    }
+  );
 };

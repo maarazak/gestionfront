@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Plus, Settings, Trash2, Users } from 'lucide-react';
 import { TenantDialog } from '@/components/tenants/tenant-dialog';
-import { useTenants } from '@/hooks/useTenants';
+import { useTenants, useDeleteTenant } from '@/hooks/useTenants';
 import { useAuthStore } from '@/store/authStore';
 import { Tenant } from '@/types/api';
 import { Badge } from '@/components/ui/badge';
@@ -22,15 +22,12 @@ import {
 
 export default function TenantsPage() {
   const { user, refreshUser } = useAuthStore();
-  const { tenants, isLoading, fetchTenants, deleteTenant } = useTenants();
+  const { data: tenants = [], isLoading } = useTenants();
+  const deleteTenantMutation = useDeleteTenant();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tenantToDelete, setTenantToDelete] = useState<Tenant | null>(null);
-
-  useEffect(() => {
-    fetchTenants();
-  }, []);
 
   const handleCreateNew = () => {
     setSelectedTenant(null);
@@ -50,10 +47,9 @@ export default function TenantsPage() {
   const handleDeleteConfirm = async () => {
     if (tenantToDelete) {
       try {
-        await deleteTenant(tenantToDelete.id);
+        await deleteTenantMutation.mutateAsync(tenantToDelete.id);
         setDeleteDialogOpen(false);
         setTenantToDelete(null);
-        await fetchTenants();
         await refreshUser();
       } catch (error) {
         console.error('Error deleting tenant:', error);
@@ -62,7 +58,6 @@ export default function TenantsPage() {
   };
 
   const handleSuccess = async () => {
-    await fetchTenants();
     await refreshUser();
   };
 

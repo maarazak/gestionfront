@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useTenants } from '@/hooks/useTenants';
+import { useCreateTenant, useUpdateTenant } from '@/hooks/useTenants';
 import { Tenant } from '@/types/api';
 
 interface TenantDialogProps {
@@ -23,8 +23,11 @@ interface TenantDialogProps {
 }
 
 export function TenantDialog({ open, onOpenChange, tenant, onSuccess }: TenantDialogProps) {
-  const { createTenant, updateTenant, isLoading } = useTenants();
+  const createTenantMutation = useCreateTenant();
+  const updateTenantMutation = useUpdateTenant();
   const [name, setName] = useState('');
+
+  const isLoading = createTenantMutation.isPending || updateTenantMutation.isPending;
 
   useEffect(() => {
     if (tenant) {
@@ -39,9 +42,9 @@ export function TenantDialog({ open, onOpenChange, tenant, onSuccess }: TenantDi
 
     try {
       if (tenant) {
-        await updateTenant(tenant.id, { name });
+        await updateTenantMutation.mutateAsync({ id: tenant.id, name });
       } else {
-        await createTenant({ name });
+        await createTenantMutation.mutateAsync({ name });
       }
       onOpenChange(false);
       setName('');
