@@ -10,7 +10,8 @@ import {
   Users,
   LogOut,
   UserCircle,
-  Sparkles
+  Sparkles,
+  Building2
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ export function Sidebar() {
     { name: 'Projets', href: '/projects', icon: FolderKanban, adminOnly: false, gradient: 'from-blue-500 to-blue-600' },
     { name: 'Tâches', href: '/tasks', icon: CheckSquare, adminOnly: false, gradient: 'from-emerald-500 to-emerald-600' },
     { name: 'Utilisateurs', href: '/users', icon: Users, adminOnly: true, gradient: 'from-amber-500 to-amber-600' },
+    { name: 'Organisations', href: '/tenants', icon: Building2, adminOnly: true, gradient: 'from-pink-500 to-pink-600' },
   ];
 
   const visibleNavigation = navigation.filter(item => !item.adminOnly || isAdmin);

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { TenantSwitcher } from './tenant-switcher';
 
 export function Header() {
   const { user } = useAuthStore();
@@ -28,6 +29,8 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3">
+        <TenantSwitcher />
+        
         <Link href="/profile">
           <Button 
             variant="ghost" 

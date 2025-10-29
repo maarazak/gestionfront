@@ -2,17 +2,17 @@ import { create } from 'zustand';
 import { api, ensureCSRFToken } from '@/lib/api';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/lib/constants';
 import axios, { AxiosError } from 'axios';
+import { Tenant } from '@/types/api';
 
 interface User {
   id: string;
+  uuid: string;
   name: string;
   email: string;
   role: string;
-  tenant: {
-    id: string;
-    name: string;
-    slug: string;
-  };
+  tenant: Tenant;
+  current_tenant: Tenant;
+  tenants: Tenant[];
 }
 
 interface RegisterData {
@@ -33,6 +33,8 @@ interface AuthState {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
+  switchTenant: (tenantId: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -124,6 +126,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
       }
+    }
+  },
+
+  refreshUser: async () => {
+    try {
+      const { data } = await api.get('/me');
+      set({ user: data.data, error: null });
+    } catch (error: unknown) {
+      console.error('Error refreshing user:', error);
+    }
+  },
+
+  switchTenant: async (tenantId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await api.post('/switch-tenant', {
+        tenant_id: tenantId,
+      });
+      
+      set({ user: data.data, error: null });
+      
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    } catch (error: unknown) {
+      let errorMessage: string = ERROR_MESSAGES.NETWORK_ERROR;
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response?.data?.errors) {
+          const errors = error.response.data.errors;
+          errorMessage = Object.values(errors).flat().join(', ');
+        }
+      }
+      
+      set({ error: errorMessage });
+      throw new Error(errorMessage);
+    } finally {
+      set({ isLoading: false });
     }
   },
 

@@ -1,38 +1,43 @@
-/**
- * Interfaces strictes pour les réponses API
- */
-
-// Réponse de base pour toutes les API
 export interface ApiResponse<T = unknown> {
   data: T;
   message?: string;
   status: 'success' | 'error';
 }
 
-// Réponse d'authentification
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  settings?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+  pivot?: {
+    role_id: number;
+    user_id: number;
+    tenant_id: string;
+  };
+}
+
 export interface AuthResponse {
   token: string;
   user: {
     id: string;
+    uuid: string;
     name: string;
     email: string;
     role: string;
-    tenant: {
-      id: string;
-      name: string;
-      slug: string;
-    };
+    tenant: Tenant;
+    current_tenant: Tenant;
+    tenants: Tenant[];
   };
 }
 
-// Réponse d'erreur
 export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
   status: number;
 }
 
-// Réponse pour les projets
 export interface ProjectResponse {
   id: string;
   tenant_id: string;
@@ -45,7 +50,6 @@ export interface ProjectResponse {
   completed_tasks_count?: number;
 }
 
-// Réponse pour les tâches
 export interface TaskResponse {
   id: string;
   project_id: string;
@@ -63,22 +67,18 @@ export interface TaskResponse {
   };
 }
 
-// Réponse pour les utilisateurs
 export interface UserResponse {
   id: string;
   name: string;
   email: string;
   role: string;
-  tenant: {
-    id: string;
-    name: string;
-    slug: string;
-  };
+  tenant: Tenant;
+  current_tenant?: Tenant;
+  tenants?: Tenant[];
   created_at: string;
   updated_at: string;
 }
 
-// Réponse pour les statistiques
 export interface StatsResponse {
   total_projects: number;
   active_projects: number;
@@ -87,7 +87,6 @@ export interface StatsResponse {
   pending_tasks: number;
 }
 
-// Types pour les filtres et la pagination
 export interface PaginationParams {
   page?: number;
   per_page?: number;
